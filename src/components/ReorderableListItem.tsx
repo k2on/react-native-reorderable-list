@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {ViewProps} from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -15,7 +15,8 @@ interface ReorderableListItemProps extends Animated.AnimateProps<ViewProps> {
   itemOffsets: Animated.SharedValue<ItemOffset>[];
   draggedIndex: Animated.SharedValue<number>;
   currentIndex: Animated.SharedValue<number>;
-  enabledOpacity: Animated.SharedValue<boolean>;
+  draggedItemY: Animated.SharedValue<number>;
+  draggedItemScale: Animated.SharedValue<number>;
   children: React.ReactNode;
 }
 
@@ -24,37 +25,32 @@ const ReorderableListItem: React.FC<ReorderableListItemProps> = ({
   itemOffsets,
   draggedIndex,
   currentIndex,
-  enabledOpacity,
+  draggedItemScale,
+  draggedItemY,
   children,
   ...rest
 }) => {
   const translateY = useSharedValue(0);
-  const opacity = useSharedValue(1);
+  const itemIndex = useSharedValue(-1);
+
+  useEffect(() => {
+    itemIndex.value = index;
+  });
 
   useAnimatedReaction(
     () => currentIndex.value,
     () => {
-      if (currentIndex.value >= 0 && draggedIndex.value >= 0) {
+      if (
+        itemIndex.value !== draggedIndex.value &&
+        currentIndex.value >= 0 &&
+        draggedIndex.value >= 0
+      ) {
         const moveDown = currentIndex.value > draggedIndex.value;
         const startMove = Math.min(draggedIndex.value, currentIndex.value);
         const endMove = Math.max(draggedIndex.value, currentIndex.value);
         let newValue = 0;
 
-        if (index === draggedIndex.value) {
-          for (let i = startMove; i < endMove; i++) {
-            newValue = moveDown
-              ? newValue + itemOffsets[i].value.length
-              : newValue - itemOffsets[i].value.length;
-          }
-
-          // if items have different heights and the dragged item is moved forward
-          // then its new offset position needs to be adjusted
-          const offsetCorrection = moveDown
-            ? itemOffsets[currentIndex.value].value.length -
-              itemOffsets[draggedIndex.value].value.length
-            : 0;
-          newValue += offsetCorrection;
-        } else if (index >= startMove && index <= endMove) {
+        if (itemIndex.value >= startMove && itemIndex.value <= endMove) {
           const draggedHeight = itemOffsets[draggedIndex.value].value.length;
           newValue = moveDown ? -draggedHeight : draggedHeight;
         }
@@ -69,17 +65,21 @@ const ReorderableListItem: React.FC<ReorderableListItemProps> = ({
     },
   );
 
-  useAnimatedReaction(
-    () => enabledOpacity.value,
-    (enabled) => {
-      opacity.value = enabled && index === draggedIndex.value ? 0 : 1;
-    },
-    [index],
-  );
-
+  // TODO: improve
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{translateY: translateY.value}],
-    opacity: opacity.value,
+    transform: [
+      {translateY: translateY.value},
+      {
+        translateY:
+          itemIndex.value === draggedIndex.value ? draggedItemY.value : 0,
+      },
+      {
+        scale:
+          itemIndex.value === draggedIndex.value ? draggedItemScale.value : 1,
+      },
+    ],
+    zIndex: itemIndex.value === draggedIndex.value ? 999 : undefined,
+    elevation: itemIndex.value === draggedIndex.value ? 999 : undefined,
   }));
 
   return (

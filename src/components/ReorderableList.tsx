@@ -1,17 +1,15 @@
-import React, {useEffect, useRef, useState, useCallback} from 'react';
+import React, {useRef, useCallback} from 'react';
 import {
   FlatList,
   FlatListProps,
   ListRenderItemInfo,
-  ViewStyle,
   LayoutChangeEvent,
   StatusBar,
-  unstable_batchedUpdates,
 } from 'react-native';
 import {
+  PanGestureHandlerGestureEvent,
   NativeViewGestureHandler,
   PanGestureHandler,
-  PanGestureHandlerGestureEvent,
   State,
 } from 'react-native-gesture-handler';
 import Animated, {
@@ -19,7 +17,6 @@ import Animated, {
   useSharedValue,
   useAnimatedReaction,
   runOnJS,
-  useAnimatedStyle,
   useAnimatedRef,
   useAnimatedScrollHandler,
   scrollTo,
@@ -32,7 +29,7 @@ import memoize from 'fast-memoize';
 
 import ReorderableListItem from 'components/ReorderableListItem';
 import useAnimatedSharedValues from 'hooks/useAnimatedSharedValues';
-import {ItemOffset, ItemSeparators, ReorderableListState} from 'types/misc';
+import {ItemOffset, ReorderableListState} from 'types/misc';
 import {CellProps, ReorderableListProps} from 'types/props';
 
 const AnimatedFlatList = Animated.createAnimatedComponent(
@@ -59,11 +56,11 @@ const ReorderableList = <T,>(
   const container = useAnimatedRef<any>();
   const flatList = useAnimatedRef<any>();
   const nativeHandler = useRef<NativeViewGestureHandler>(null);
-  const itemSeparators = useRef<ItemSeparators[]>([]);
+  const animationDuration = 100;
 
+  // TODO: check if all shared values are necessary
   const gestureState = useSharedValue<State>(State.UNDETERMINED);
   const currentY = useSharedValue(0);
-  const startY = useSharedValue(0);
   const containerPositionX = useSharedValue(0);
   const containerPositionY = useSharedValue(0);
   const scrollOffset = useSharedValue(0);
@@ -74,25 +71,15 @@ const ReorderableList = <T,>(
   const topMoveThreshold = useSharedValue(0);
   const bottomMoveThreshold = useSharedValue(0);
   const flatListHeight = useSharedValue(0);
-  // position of the drag gesture relative to the item
-  const offsetY = useSharedValue(0);
-  // TODO: remove nullable when this bug is fixed
-  // https://github.com/software-mansion/react-native-reanimated/issues/2019
-  const draggedTranslateY = useSharedValue<number | null>(null);
+  const draggedItemY = useSharedValue(0);
+  const draggedItemScale = useSharedValue(1);
   // keeps track of the new position of the dragged item
   const currentIndex = useSharedValue(-1);
   // keeps track of the dragged item order
   const draggedIndex = useSharedValue(-1);
-  // keeps track of the actual rendered item, useful on reorder re-render to
-  // avoid element shifted at the new position to be rendered just before it disappears
-  const draggedInfoIndex = useSharedValue(-1);
   const state = useSharedValue<ReorderableListState>(ReorderableListState.IDLE);
   const autoScrollOffset = useSharedValue(-1);
   const autoScrollSpeed = useSharedValue(Math.max(0, scrollSpeed));
-  const enabledOpacity = useSharedValue(false);
-  const draggedItemScale = useSharedValue(1);
-
-  const [dragged, setDragged] = useState(false);
 
   const relativeToContainer = (y: number, x: number) => {
     'worklet';
@@ -113,14 +100,15 @@ const ReorderableList = <T,>(
         const {y} = relativeToContainer(e.absoluteY, e.absoluteX);
 
         ctx.startY = y;
-        startY.value = y;
         currentY.value = y;
         gestureState.value = e.state;
+        draggedItemY.value = e.translationY;
       }
     },
     onActive: (e, ctx) => {
       if (state.value !== ReorderableListState.RELEASING) {
         currentY.value = ctx.startY + e.translationY;
+        draggedItemY.value = e.translationY;
         gestureState.value = e.state;
       }
     },
@@ -130,72 +118,24 @@ const ReorderableList = <T,>(
     onFail: (e) => (gestureState.value = e.state),
   });
 
-  useEffect(() => {
-    if (!dragged) {
-      runOnUI(() => {
-        'worklet';
-
-        state.value = ReorderableListState.IDLE;
-      })();
-    }
-  }, [dragged, state, enabledOpacity]);
-
-  useEffect(() => {
-    runOnUI(() => {
-      'worklet';
-
-      // enable opacity after dragged item is rendered
-      // to avoid flickering effect (if it's done before the item becomes transparent
-      // and then the dragged item is rendered on top and so it flickers)
-      enabledOpacity.value = dragged;
-
-      if (dragged) {
-        draggedItemScale.value = withTiming(dragScale, {
-          duration: 100,
-          easing: Easing.out(Easing.ease),
-        });
-      }
-    })();
-  }, [dragged, draggedItemScale, enabledOpacity, dragScale]);
-
-  const enableDragged = useCallback(
+  const setScrollEnabled = useCallback(
     (enabled: boolean) => {
       flatList.current.setNativeProps({scrollEnabled: !enabled});
-      setDragged(enabled);
     },
-    [setDragged, flatList],
+    [flatList],
   );
 
   const reorder = (fromIndex: number, toIndex: number) => {
     if (fromIndex !== toIndex) {
-      unstable_batchedUpdates(() => {
-        onReorder({fromIndex, toIndex});
-        enableDragged(false);
-      });
-    } else {
-      enableDragged(false);
+      onReorder({fromIndex, toIndex});
     }
-  };
 
-  const endDrag = () => {
-    'worklet';
-
-    const draggedIndexTemp = draggedIndex.value;
-    const currentIndexTemp = currentIndex.value;
+    setScrollEnabled(false);
 
     draggedIndex.value = -1;
     currentIndex.value = -1;
-
-    // if opacity is disabled after render (on effect), the absolute dragged item is
-    // removed while the dragged item in the list is still transparent and so it flickers, so
-    // we need to disabled it before removing the dragged item to avoid flickering
-    enabledOpacity.value = false;
-
-    // avoid element shifted at the new position
-    // to be rendered as dragged item on reorder re-render
-    draggedInfoIndex.value = currentIndexTemp;
-
-    runOnJS(reorder)(draggedIndexTemp, currentIndexTemp);
+    draggedItemY.value = 0;
+    state.value = ReorderableListState.IDLE;
   };
 
   const getIndexFromY = (y: number, scrollY?: number) => {
@@ -240,34 +180,33 @@ const ReorderableList = <T,>(
               itemOffsets[draggedIndex.value].value.length
             : 0;
         const newTopPosition =
-          itemOffsets[currentIndex.value].value.offset +
-          offsetCorrection -
-          scrollOffset.value;
+          itemOffsets[currentIndex.value].value.offset -
+          itemOffsets[draggedIndex.value].value.offset +
+          offsetCorrection;
 
-        const duration = 100;
         draggedItemScale.value = withTiming(
           1,
           {
-            duration,
+            duration: animationDuration,
             easing: Easing.out(Easing.ease),
           },
           () => {
-            if (draggedTranslateY.value === newTopPosition) {
-              endDrag();
+            if (draggedItemY.value === newTopPosition) {
+              runOnJS(reorder)(draggedIndex.value, currentIndex.value);
             }
           },
         );
 
-        if (draggedTranslateY.value !== newTopPosition) {
+        if (draggedItemY.value !== newTopPosition) {
           // animate dragged item to its new position on release
-          draggedTranslateY.value = withTiming(
+          draggedItemY.value = withTiming(
             newTopPosition,
             {
-              duration,
+              duration: animationDuration,
               easing: Easing.out(Easing.ease),
             },
             () => {
-              endDrag();
+              runOnJS(reorder)(draggedIndex.value, currentIndex.value);
             },
           );
         }
@@ -282,8 +221,6 @@ const ReorderableList = <T,>(
         state.value === ReorderableListState.DRAGGING ||
         state.value === ReorderableListState.AUTO_SCROLL
       ) {
-        draggedTranslateY.value = y - offsetY.value;
-
         const {index} = getIndexFromY(y);
         currentIndex.value = index;
 
@@ -339,37 +276,35 @@ const ReorderableList = <T,>(
     [itemOffsets],
   );
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const drag = useCallback(
-    memoize(
-      (index: number) => () =>
-        runOnUI(() => {
-          'worklet';
+  const startDrag = useCallback(
+    (index: number) => {
+      'worklet';
 
-          offsetY.value =
-            startY.value -
-            (itemOffsets[index].value.offset - scrollOffset.value);
-          draggedTranslateY.value = startY.value - offsetY.value;
-          draggedIndex.value = index;
-          draggedInfoIndex.value = index;
-          currentIndex.value = index;
-          state.value = ReorderableListState.DRAGGING;
+      draggedIndex.value = index;
+      currentIndex.value = index;
+      state.value = ReorderableListState.DRAGGING;
 
-          runOnJS(enableDragged)(true);
-        })(),
-    ),
+      draggedItemScale.value = withTiming(dragScale, {
+        duration: animationDuration,
+        easing: Easing.out(Easing.ease),
+      });
+
+      runOnJS(setScrollEnabled)(true);
+    },
     [
-      offsetY,
-      startY,
-      scrollOffset,
-      draggedTranslateY,
       draggedIndex,
-      draggedInfoIndex,
       currentIndex,
       state,
-      itemOffsets,
-      enableDragged,
+      setScrollEnabled,
+      dragScale,
+      draggedItemScale,
     ],
+  );
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const drag = useCallback(
+    memoize((index: number) => () => runOnUI(startDrag)(index)),
+    [startDrag],
   );
 
   const renderAnimatedCell = useCallback(
@@ -385,19 +320,31 @@ const ReorderableList = <T,>(
         currentIndex={currentIndex}
         draggedIndex={draggedIndex}
         itemOffsets={itemOffsets}
-        enabledOpacity={enabledOpacity}
+        // TODO: fix name?
+        draggedItemY={draggedItemY}
+        draggedItemScale={draggedItemScale}
         onLayout={handleItemLayout(index)}>
         {children}
       </ReorderableListItem>
     ),
-    [currentIndex, draggedIndex, itemOffsets, enabledOpacity, handleItemLayout],
+    [
+      currentIndex,
+      draggedIndex,
+      itemOffsets,
+      draggedItemY,
+      draggedItemScale,
+      handleItemLayout,
+    ],
   );
 
   const renderDraggableItem = useCallback(
-    (info: ListRenderItemInfo<T>) => {
-      itemSeparators.current[info.index] = info.separators;
-      return renderItem({...info, drag: drag(info.index)});
-    },
+    (info: ListRenderItemInfo<T>) =>
+      renderItem({
+        ...info,
+        drag: drag(info.index),
+        // TODO: fix
+        isDragged: false,
+      }),
     [renderItem, drag],
   );
 
@@ -408,6 +355,7 @@ const ReorderableList = <T,>(
     });
   };
 
+  // TODO: remove useCallback
   const handleFlatListLayout = useCallback(
     (e: LayoutChangeEvent) => {
       const {height} = e.nativeEvent.layout;
@@ -431,43 +379,6 @@ const ReorderableList = <T,>(
     ],
   );
 
-  const draggedItemStyle = useAnimatedStyle(() => {
-    // TODO: remove this condition when this bug is fixed
-    // https://github.com/software-mansion/react-native-reanimated/issues/2019
-    if (draggedTranslateY.value !== null) {
-      return {
-        transform: [
-          {translateY: draggedTranslateY.value},
-          {scale: draggedItemScale.value},
-        ],
-      };
-    }
-
-    return {};
-  });
-
-  const draggedItemInfo = {
-    index: draggedInfoIndex.value,
-    item: data[draggedInfoIndex.value],
-    separators: itemSeparators.current[draggedInfoIndex.value],
-    isDragged: true,
-  };
-
-  // TODO: remove when this bug is fixed
-  // https://github.com/software-mansion/react-native-reanimated/issues/2019
-  // fallback when animated style is empty
-  const draggedItemFallbackStyle = {
-    transform: itemOffsets[draggedInfoIndex.value]
-      ? [
-          {
-            translateY:
-              itemOffsets[draggedInfoIndex.value].value.offset -
-              scrollOffset.value,
-          },
-        ]
-      : undefined,
-  };
-
   return (
     <PanGestureHandler
       maxPointers={1}
@@ -490,33 +401,13 @@ const ReorderableList = <T,>(
             keyExtractor={keyExtractor}
             scrollEventThrottle={1}
             horizontal={false}
+            // TODO: set in docs as unsupported prop
+            removeClippedSubviews={false}
           />
         </NativeViewGestureHandler>
-        {dragged && (
-          <Animated.View
-            style={[
-              styles.draggedItem,
-              draggedItemFallbackStyle,
-              draggedItemStyle,
-            ]}>
-            {renderItem(draggedItemInfo)}
-          </Animated.View>
-        )}
       </Animated.View>
     </PanGestureHandler>
   );
-};
-
-const styles = {
-  draggedItem: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-  } as ViewStyle,
-  dragged: {
-    opacity: 0,
-  },
 };
 
 export default React.memo(React.forwardRef(ReorderableList)) as <T>(

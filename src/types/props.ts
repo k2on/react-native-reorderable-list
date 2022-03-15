@@ -14,8 +14,8 @@ export interface CellProps<T> extends FlatListProps<T> {
 
 export interface ReorderableListRenderItemInfo<T>
   extends ListRenderItemInfo<T> {
-  drag?: () => void;
-  isDragged?: boolean;
+  drag: () => void;
+  isDragged: boolean;
 }
 
 export interface ReorderableListReorderEvent {
@@ -23,10 +23,15 @@ export interface ReorderableListReorderEvent {
   toIndex: number;
 }
 
-type UnsupportedProps = 'horizontal' | 'onScroll' | 'scrollEventThrottle';
+type OmittedProps =
+  | 'horizontal'
+  | 'onScroll'
+  | 'scrollEventThrottle'
+  | 'renderItem'
+  | 'removeClippedSubviews';
 
 export interface ReorderableListProps<T>
-  extends Omit<FlatListProps<T>, UnsupportedProps> {
+  extends Omit<FlatListProps<T>, OmittedProps> {
   data: T[];
   containerStyle?: StyleProp<Animated.AnimateStyle<StyleProp<ViewStyle>>>;
   scrollAreaSize?: number;
