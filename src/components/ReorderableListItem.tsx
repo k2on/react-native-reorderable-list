@@ -30,12 +30,12 @@ const ReorderableListItem: React.FC<ReorderableListItemProps> = ({
   children,
   ...rest
 }) => {
-  const translateY = useSharedValue(0);
+  const itemTranslateY = useSharedValue(0);
   const itemIndex = useSharedValue(-1);
 
   useEffect(() => {
     itemIndex.value = index;
-  });
+  }, [itemIndex, index]);
 
   useAnimatedReaction(
     () => currentIndex.value,
@@ -55,8 +55,9 @@ const ReorderableListItem: React.FC<ReorderableListItemProps> = ({
           newValue = moveDown ? -draggedHeight : draggedHeight;
         }
 
-        if (newValue !== translateY.value) {
-          translateY.value = withTiming(newValue, {
+        if (newValue !== itemTranslateY.value) {
+          itemTranslateY.value = withTiming(newValue, {
+            // TODO: add const
             duration: 100,
             easing: Easing.out(Easing.ease),
           });
@@ -65,22 +66,21 @@ const ReorderableListItem: React.FC<ReorderableListItemProps> = ({
     },
   );
 
-  // TODO: improve
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      {translateY: translateY.value},
-      {
-        translateY:
-          itemIndex.value === draggedIndex.value ? draggedItemY.value : 0,
-      },
-      {
-        scale:
-          itemIndex.value === draggedIndex.value ? draggedItemScale.value : 1,
-      },
-    ],
-    zIndex: itemIndex.value === draggedIndex.value ? 999 : undefined,
-    elevation: itemIndex.value === draggedIndex.value ? 999 : undefined,
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    let scale = 1;
+    let zIndex = 0;
+
+    if (itemIndex.value === draggedIndex.value) {
+      itemTranslateY.value = draggedItemY.value;
+      scale = draggedItemScale.value;
+      zIndex = 999;
+    }
+
+    return {
+      transform: [{translateY: itemTranslateY.value}, {scale}],
+      zIndex,
+    };
+  });
 
   return (
     <Animated.View {...rest} style={[rest.style, animatedStyle]}>
