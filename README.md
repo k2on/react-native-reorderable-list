@@ -27,26 +27,30 @@ So head down to their docs and follow their instructions.
 
 ## API
 
-This component uses a [FlatList](https://reactnative.dev/docs/flatlist) and it extends its props. See [Known Limitations](#known-limitations) for unsupported props.
+This component uses a [FlatList](https://reactnative.dev/docs/flatlist) and it extends its props. See [Known Limitations](#known-limitations).
 
 Additional props:
 
 | Prop                      | Type                                  | Required   | Default   | Description                                           |
 |---------------------------|---------------------------------------|------------|-----------|-------------------------------------------------------|
-| renderItem                | `(info: {item: T, index: number, separators: ItemSeparators, drag?: () => void, isDragged?: boolean}) => ReactElement`  | yes        |           | Renders into the list an item from data. The function `drag` needs to be called when the drag gesture should be enabled, for example `onLongPress` event. The property `isDragged` becomes true for the dragged item. |
-| onReorder                 | `(event: {fromIndex: number, toIndex: number}) => void`  | yes        |           | Function called when an item is released and the list is reordered. |
-| containerStyle            | `StyleProp<ViewStyle>`                | no         |           | Style for the FlatList container.                     |
-| scrollAreaSize            | `number`                              | no         | `0.1`     | Portion at the extremeties of the list which triggers scrolling when dragging an item. Accepts a value between `0` and `0.5`. |
-| scrollSpeed               | `number`                              | no         | `2`       | Speed at which the list scrolls.                      |
-| dragScale                 | `number`                              | no         | `1`       | Size ratio to which an item scales when dragged.      |
+| renderItem                | `(info: {item: T, index: number, separators: ItemSeparators, drag?: () => void, isDragged?: boolean}) => ReactElement`  | yes        |           |    * Renders an item from data into the list. The function `drag` needs to be called when the drag gesture should be enabled, for example `onLongPress` event. The property `isDragged` becomes true for the dragged item. |
+| onReorder                 | `(event: {fromIndex: number, toIndex: number}) => void`  | yes        |           | Event fired when an item is released and the list is reordered. |
+| containerStyle            | `StyleProp<ViewStyle>`                | no         |           | Style of the FlatList container.
+| scrollAreaSize            | `number`                              | no         | `0.1`     | Portion at the extremeties of the list which triggers scrolling when an item is dragged. Accepts a value between `0` and `0.5`. |
+| scrollSpeed               | `number`                              | no         | `2`       | Speed at which the list scrolls when an item is dragged to the scroll areas.                     |
+| dragScale                 | `number`                              | no         | `1`       | Size to which an item scales when dragged.      |
 
 ## Known Limitations
 
-At the moment it doesn't support these FlatList props:
+Unsupported FlatList props:
 
   - ```horizontal```
-  - ```onScroll```
   - ```scrollEventThrottle```
+  - ```removeClippedSubviews```
+
+Different FlatList props:
+
+  - ```onScroll``` needs to be a worklet. See [Reanimated docs](https://docs.swmansion.com/react-native-reanimated/docs/2.2.0/worklets/) for further info.
 
 ## Usage
 

@@ -54,6 +54,7 @@ const ReorderableList = <T,>(
     onLayout,
     onReorder,
     keyExtractor,
+    onScroll,
     ...rest
   }: ReorderableListProps<T>,
   ref: React.ForwardedRef<FlatList<T>>,
@@ -278,22 +279,24 @@ const ReorderableList = <T,>(
   );
 
   const lastScrollOffsetY = useSharedValue(0);
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      lastScrollOffsetY.value = currentScrollOffsetY.value;
-      currentScrollOffsetY.value = e.contentOffset.y;
+  const scrollHandler = useAnimatedScrollHandler((e) => {
+    lastScrollOffsetY.value = currentScrollOffsetY.value;
+    currentScrollOffsetY.value = e.contentOffset.y;
 
-      if (state.value === ReorderableListState.AUTO_SCROLL) {
-        draggedItemY.value +=
-          currentScrollOffsetY.value - lastScrollOffsetY.value;
-      }
+    if (state.value === ReorderableListState.AUTO_SCROLL) {
+      draggedItemY.value +=
+        currentScrollOffsetY.value - lastScrollOffsetY.value;
+    }
 
-      dragScrollTranslationY.value =
-        state.value === ReorderableListState.AUTO_SCROLL ||
-        state.value === ReorderableListState.DRAGGING
-          ? currentScrollOffsetY.value - dragInitialScrollOffsetY.value
-          : 0;
-    },
+    dragScrollTranslationY.value =
+      state.value === ReorderableListState.AUTO_SCROLL ||
+      state.value === ReorderableListState.DRAGGING
+        ? currentScrollOffsetY.value - dragInitialScrollOffsetY.value
+        : 0;
+
+    if (onScroll) {
+      onScroll(e);
+    }
   });
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
