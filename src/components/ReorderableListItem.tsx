@@ -12,6 +12,7 @@ import {ItemOffset} from 'types/misc';
 
 interface ReorderableListItemProps extends Animated.AnimateProps<ViewProps> {
   index: number;
+  animationDuration: number;
   itemOffsets: Animated.SharedValue<ItemOffset>[];
   draggedIndex: Animated.SharedValue<number>;
   currentIndex: Animated.SharedValue<number>;
@@ -22,12 +23,12 @@ interface ReorderableListItemProps extends Animated.AnimateProps<ViewProps> {
 
 const ReorderableListItem: React.FC<ReorderableListItemProps> = ({
   index,
+  animationDuration,
   itemOffsets,
   draggedIndex,
   currentIndex,
   draggedItemScale,
   draggedItemY,
-  children,
   ...rest
 }) => {
   const itemTranslateY = useSharedValue(0);
@@ -57,8 +58,7 @@ const ReorderableListItem: React.FC<ReorderableListItemProps> = ({
 
         if (newValue !== itemTranslateY.value) {
           itemTranslateY.value = withTiming(newValue, {
-            // TODO: add const
-            duration: 100,
+            duration: animationDuration,
             easing: Easing.out(Easing.ease),
           });
         }
@@ -82,11 +82,7 @@ const ReorderableListItem: React.FC<ReorderableListItemProps> = ({
     };
   });
 
-  return (
-    <Animated.View {...rest} style={[rest.style, animatedStyle]}>
-      {children}
-    </Animated.View>
-  );
+  return <Animated.View {...rest} style={[rest.style, animatedStyle]} />;
 };
 
 export default ReorderableListItem;

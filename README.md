@@ -36,9 +36,10 @@ Additional props:
 | renderItem                | `(info: {item: T, index: number, separators: ItemSeparators, drag?: () => void, isDragged?: boolean}) => ReactElement`  | yes        |           |    * Renders an item from data into the list. The function `drag` needs to be called when the drag gesture should be enabled, for example `onLongPress` event. The property `isDragged` becomes true for the dragged item. |
 | onReorder                 | `(event: {fromIndex: number, toIndex: number}) => void`  | yes        |           | Event fired when an item is released and the list is reordered. |
 | containerStyle            | `StyleProp<ViewStyle>`                | no         |           | Style of the FlatList container.
-| scrollAreaSize            | `number`                              | no         | `0.1`     | Portion at the extremeties of the list which triggers scrolling when an item is dragged. Accepts a value between `0` and `0.5`. |
-| scrollSpeed               | `number`                              | no         | `2`       | Speed at which the list scrolls when an item is dragged to the scroll areas.                     |
+| autoscrollArea            | `number`                              | no         | `0.1`     | Area at the extremeties of the list which triggers scrolling when an item is dragged. Accepts a value between `0` and `0.5`. |
+| autoscrollSpeed           | `number`                              | no         | `2`       | Speed at which the list scrolls when an item is dragged to the scroll areas.                     |
 | dragScale                 | `number`                              | no         | `1`       | Size to which an item scales when dragged.      |
+| animationDuration         | `number`                              | no         | `100`     | Duration of animations in milliseconds.         |
 
 ## Known Limitations
 
@@ -47,6 +48,7 @@ Unsupported FlatList props:
   - ```horizontal```
   - ```scrollEventThrottle```
   - ```removeClippedSubviews```
+  - ```CellRendererComponent```
 
 Different FlatList props:
 

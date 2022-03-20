@@ -50,17 +50,21 @@ export interface ReorderableListProps<T>
    */
   containerStyle?: StyleProp<ViewStyle>;
   /**
-   * Portion at the extremeties of the list which triggers scrolling when an item is dragged. Accepts a value between `0` and `0.5`.
+   * Area at the extremeties of the list which triggers scrolling when an item is dragged. Accepts a value between `0` and `0.5`. Default: `0.1`.
    */
-  scrollAreaSize?: number;
+  autoscrollArea?: number;
   /**
-   * Speed at which the list scrolls when an item is dragged to the scroll areas.
+   * Speed at which the list scrolls when an item is dragged to the scroll areas. Default: `2`.
    */
-  scrollSpeed?: number;
+  autoscrollSpeed?: number;
   /**
-   * Size to which an item scales when dragged.
+   * Size to which an item scales when dragged. Default: `1`.
    */
   dragScale?: number;
+  /**
+   * Duration of animations in milliseconds. Default: `100`.
+   */
+  animationDuration?: number;
   /**
    * Renders an item from data into the list.
    * @param info - Provides an item and metadata. Extends ListRenderItemInfo from FlatList.

@@ -25,8 +25,8 @@ import Animated, {
   Easing,
   runOnUI,
 } from 'react-native-reanimated';
-import composeRefs from '@seznam/compose-react-refs';
-import memoize from 'fast-memoize';
+import composeRefs from '@seznam/compose-react-refs'; // TODO: remove if possible
+import memoize from 'fast-memoize'; // TODO: remove if possible
 
 import ReorderableListItem from 'components/ReorderableListItem';
 import useAnimatedSharedValues from 'hooks/useAnimatedSharedValues';
@@ -47,9 +47,10 @@ const ReorderableList = <T,>(
   {
     data,
     containerStyle,
-    scrollAreaSize = 0.1,
-    scrollSpeed = 2,
+    autoscrollArea = 0.1,
+    autoscrollSpeed = 2,
     dragScale = 1,
+    animationDuration = 100,
     renderItem,
     onLayout,
     onReorder,
@@ -63,40 +64,29 @@ const ReorderableList = <T,>(
   const flatList = useAnimatedRef<any>();
   const nativeHandler = useRef<NativeViewGestureHandler>(null);
   const [dragged, setDragged] = useState(false);
-  const animationDuration = 100;
 
   const gestureState = useSharedValue<State>(State.UNDETERMINED);
   const currentY = useSharedValue(0);
   const containerPositionX = useSharedValue(0);
   const containerPositionY = useSharedValue(0);
   const currentScrollOffsetY = useSharedValue(0);
+  const lastScrollOffsetY = useSharedValue(0);
   const dragScrollTranslationY = useSharedValue(0);
   const dragInitialScrollOffsetY = useSharedValue(0);
   const itemOffsets = useAnimatedSharedValues<ItemOffset>(
     () => ({length: 0, offset: 0}),
     data.length,
   );
-  const topAutoScrollZone = useSharedValue(0);
-  const bottomAutoScrollZone = useSharedValue(0);
+  const topAutoscrollArea = useSharedValue(0);
+  const bottomAutoscrollArea = useSharedValue(0);
+  const autoscrollOffset = useSharedValue(-1);
+  const scrollSpeed = useSharedValue(Math.max(0, autoscrollSpeed));
   const flatListHeight = useSharedValue(0);
   const draggedItemY = useSharedValue(0);
   const draggedItemScale = useSharedValue(1);
-  // keeps track of the new position of the dragged item
   const currentIndex = useSharedValue(-1);
-  // keeps track of the dragged item order
   const draggedIndex = useSharedValue(-1);
   const state = useSharedValue<ReorderableListState>(ReorderableListState.IDLE);
-  const autoScrollOffset = useSharedValue(-1);
-  const autoScrollSpeed = useSharedValue(Math.max(0, scrollSpeed));
-
-  const relativeToContainer = (y: number, x: number) => {
-    'worklet';
-
-    return {
-      y: y - containerPositionY.value - (StatusBar.currentHeight || 0),
-      x: x - containerPositionX.value,
-    };
-  };
 
   const handleGestureEvent = useAnimatedGestureHandler<
     PanGestureHandlerGestureEvent,
@@ -105,10 +95,13 @@ const ReorderableList = <T,>(
     onStart: (e, ctx) => {
       // prevent new dragging until item is completely released
       if (state.value !== ReorderableListState.RELEASING) {
-        const {y} = relativeToContainer(e.absoluteY, e.absoluteX);
+        const relativeY =
+          e.absoluteY -
+          containerPositionY.value -
+          (StatusBar.currentHeight || 0);
 
-        ctx.startY = y;
-        currentY.value = y;
+        ctx.startY = relativeY;
+        currentY.value = relativeY;
         draggedItemY.value = e.translationY;
         gestureState.value = e.state;
       }
@@ -243,42 +236,41 @@ const ReorderableList = <T,>(
         const {index} = getIndexFromY(y);
         currentIndex.value = index;
 
-        if (y <= topAutoScrollZone.value || y >= bottomAutoScrollZone.value) {
+        if (y <= topAutoscrollArea.value || y >= bottomAutoscrollArea.value) {
           state.value = ReorderableListState.AUTO_SCROLL;
-          autoScrollOffset.value = currentScrollOffsetY.value;
+          autoscrollOffset.value = currentScrollOffsetY.value;
         } else {
           state.value = ReorderableListState.DRAGGING;
-          autoScrollOffset.value = -1;
+          autoscrollOffset.value = -1;
         }
       }
     },
   );
 
   useAnimatedReaction(
-    () => autoScrollOffset.value,
+    () => autoscrollOffset.value,
     () => {
       if (state.value === ReorderableListState.AUTO_SCROLL) {
         let speed = 0;
-        if (currentY.value <= topAutoScrollZone.value) {
-          speed = -autoScrollSpeed.value;
-        } else if (currentY.value >= bottomAutoScrollZone.value) {
-          speed = autoScrollSpeed.value;
+        if (currentY.value <= topAutoscrollArea.value) {
+          speed = -scrollSpeed.value;
+        } else if (currentY.value >= bottomAutoscrollArea.value) {
+          speed = scrollSpeed.value;
         }
 
         if (speed !== 0) {
-          scrollTo(flatList, 0, autoScrollOffset.value + speed, true);
-          autoScrollOffset.value += speed;
+          scrollTo(flatList, 0, autoscrollOffset.value + speed, true);
+          autoscrollOffset.value += speed;
         }
 
         // when autoscrolling user may not be moving his finger so we need
         // to update the current position of the dragged item here
-        const {index} = getIndexFromY(currentY.value, autoScrollOffset.value);
+        const {index} = getIndexFromY(currentY.value, autoscrollOffset.value);
         currentIndex.value = index;
       }
     },
   );
 
-  const lastScrollOffsetY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler((e) => {
     lastScrollOffsetY.value = currentScrollOffsetY.value;
     currentScrollOffsetY.value = e.contentOffset.y;
@@ -330,10 +322,11 @@ const ReorderableList = <T,>(
       draggedIndex,
       currentIndex,
       state,
-      dragScale,
       draggedItemScale,
       dragInitialScrollOffsetY,
       currentScrollOffsetY,
+      dragScale,
+      animationDuration,
       setDragEnabled,
     ],
   );
@@ -354,6 +347,7 @@ const ReorderableList = <T,>(
             : index
         }
         index={index}
+        animationDuration={animationDuration}
         currentIndex={currentIndex}
         draggedIndex={draggedIndex}
         itemOffsets={itemOffsets}
@@ -369,6 +363,7 @@ const ReorderableList = <T,>(
       itemOffsets,
       draggedItemY,
       draggedItemScale,
+      animationDuration,
       handleItemLayout,
     ],
   );
@@ -392,10 +387,10 @@ const ReorderableList = <T,>(
 
   const handleFlatListLayout = (e: LayoutChangeEvent) => {
     const {height} = e.nativeEvent.layout;
-    const portion = height * Math.max(0, Math.min(scrollAreaSize, 0.5));
+    const area = height * Math.max(0, Math.min(autoscrollArea, 0.5));
 
-    topAutoScrollZone.value = portion;
-    bottomAutoScrollZone.value = height - portion;
+    topAutoscrollArea.value = area;
+    bottomAutoscrollArea.value = height - area;
 
     flatListHeight.value = height;
 
