@@ -1,29 +1,19 @@
 import {
   FlatListProps,
-  ListRenderItemInfo,
+  LayoutChangeEvent,
   NativeScrollEvent,
   StyleProp,
   ViewStyle,
 } from 'react-native';
 
-export interface CellProps<T> extends FlatListProps<T> {
+export interface CellProps<T> {
   index: number;
   children?: React.ReactElement;
-  data: T[];
+  item: T;
+  onLayout: (e: LayoutChangeEvent) => void;
+  parentProps: FlatListProps<T>;
+  keyExtractor?: (item: T, index: number) => string;
 }
-
-export interface ReorderableListRenderItemInfo<T>
-  extends ListRenderItemInfo<T> {
-  /**
-   * Needs to be called when the drag gesture should be enabled, for example `onLongPress` event.
-   */
-  drag: () => void;
-  /**
-   * Becomes `true` when the current item is dragged.
-   */
-  isDragged: boolean;
-}
-
 export interface ReorderableListReorderEvent {
   /**
    * Index of the dragged item.
@@ -39,7 +29,6 @@ type OmittedProps =
   | 'horizontal'
   | 'onScroll'
   | 'scrollEventThrottle'
-  | 'renderItem'
   | 'removeClippedSubviews';
 
 export interface ReorderableListProps<T>
@@ -54,22 +43,13 @@ export interface ReorderableListProps<T>
    */
   autoscrollArea?: number;
   /**
-   * Speed at which the list scrolls when an item is dragged to the scroll areas. Default: `2`.
+   * Speed at which the list scrolls when an item is dragged to the scroll areas. Default: `1`.
    */
   autoscrollSpeed?: number;
-  /**
-   * Size to which an item scales when dragged. Default: `1`.
-   */
-  dragScale?: number;
   /**
    * Duration of animations in milliseconds. Default: `100`.
    */
   animationDuration?: number;
-  /**
-   * Renders an item from data into the list.
-   * @param info - Provides an item and metadata. Extends ListRenderItemInfo from FlatList.
-   */
-  renderItem: (info: ReorderableListRenderItemInfo<T>) => React.ReactElement;
   /**
    * Event fired after an item is released and the list is reordered.
    */

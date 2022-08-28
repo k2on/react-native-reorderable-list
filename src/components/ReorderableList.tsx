@@ -1,8 +1,7 @@
-import React, {useRef, useCallback, useState} from 'react';
+import React, {useRef, useCallback, useMemo} from 'react';
 import {
   FlatList,
   FlatListProps,
-  ListRenderItemInfo,
   LayoutChangeEvent,
   StatusBar,
   unstable_batchedUpdates,
@@ -23,15 +22,17 @@ import Animated, {
   scrollTo,
   withTiming,
   Easing,
-  runOnUI,
+  useWorkletCallback,
+  withDelay,
 } from 'react-native-reanimated';
-import composeRefs from '@seznam/compose-react-refs'; // TODO: remove if possible
-import memoize from 'fast-memoize'; // TODO: remove if possible
 
-import ReorderableListItem from 'components/ReorderableListItem';
-import useAnimatedSharedValues from 'hooks/useAnimatedSharedValues';
-import {ItemOffset, ReorderableListState} from 'types/misc';
-import {CellProps, ReorderableListProps} from 'types/props';
+import ReorderableListCell from '@library/components/ReorderableListCell';
+import useAnimatedSharedValues from '@library/hooks/useAnimatedSharedValues';
+import {ReorderableCellContext} from '@library/hooks/useReorderableCell';
+import {ItemOffset, ReorderableListState} from '@library/types/misc';
+import {CellProps, ReorderableListProps} from '@library/types/props';
+import {setForwardedRef} from '@library/utils/setForwardedRef';
+import {AUTOSCROLL_INCREMENT, AUTOSCROLL_DELAY} from '@library/consts';
 
 const version = React.version.split('.');
 const hasAutomaticBatching =
@@ -40,7 +41,7 @@ const hasAutomaticBatching =
 const AnimatedFlatList = Animated.createAnimatedComponent(
   FlatList,
 ) as unknown as <T>(
-  props: FlatListProps<T> & {ref: React.Ref<FlatList<T>>},
+  props: FlatListProps<T> & {ref?: React.Ref<FlatList<T>>},
 ) => React.ReactElement;
 
 const ReorderableList = <T,>(
@@ -48,45 +49,53 @@ const ReorderableList = <T,>(
     data,
     containerStyle,
     autoscrollArea = 0.1,
-    autoscrollSpeed = 2,
-    dragScale = 1,
+    autoscrollSpeed = 1,
     animationDuration = 100,
-    renderItem,
+    CellRendererComponent,
     onLayout,
     onReorder,
-    keyExtractor,
     onScroll,
     ...rest
   }: ReorderableListProps<T>,
   ref: React.ForwardedRef<FlatList<T>>,
 ) => {
-  const container = useAnimatedRef<any>();
-  const flatList = useAnimatedRef<any>();
+  const container = useAnimatedRef<Animated.View>();
+  const flatList = useAnimatedRef<FlatList>();
   const nativeHandler = useRef<NativeViewGestureHandler>(null);
-  const [dragged, setDragged] = useState(false);
-
   const gestureState = useSharedValue<State>(State.UNDETERMINED);
   const currentY = useSharedValue(0);
   const containerPositionX = useSharedValue(0);
   const containerPositionY = useSharedValue(0);
   const currentScrollOffsetY = useSharedValue(0);
-  const lastScrollOffsetY = useSharedValue(0);
   const dragScrollTranslationY = useSharedValue(0);
   const dragInitialScrollOffsetY = useSharedValue(0);
+  const draggedHeight = useSharedValue(0);
   const itemOffsets = useAnimatedSharedValues<ItemOffset>(
     () => ({length: 0, offset: 0}),
     data.length,
   );
   const topAutoscrollArea = useSharedValue(0);
   const bottomAutoscrollArea = useSharedValue(0);
-  const autoscrollOffset = useSharedValue(-1);
-  const scrollSpeed = useSharedValue(Math.max(0, autoscrollSpeed));
+  const autoscrollTrigger = useSharedValue(-1);
+  const animatedScrollOffset = useSharedValue(0);
+  const lastAutoscrollTrigger = useSharedValue(-1);
   const flatListHeight = useSharedValue(0);
-  const draggedItemY = useSharedValue(0);
-  const draggedItemScale = useSharedValue(1);
+  const itemsY = useAnimatedSharedValues(() => 0, data.length);
   const currentIndex = useSharedValue(-1);
   const draggedIndex = useSharedValue(-1);
+  const dragged = useAnimatedSharedValues(() => false, data.length);
   const state = useSharedValue<ReorderableListState>(ReorderableListState.IDLE);
+
+  const reorderableCellContextValue = useMemo(
+    () => ({
+      animationDuration,
+      draggedHeight,
+      currentIndex,
+      itemsY,
+      dragged,
+    }),
+    [animationDuration, draggedHeight, currentIndex, itemsY, dragged],
+  );
 
   const handleGestureEvent = useAnimatedGestureHandler<
     PanGestureHandlerGestureEvent,
@@ -102,14 +111,19 @@ const ReorderableList = <T,>(
 
         ctx.startY = relativeY;
         currentY.value = relativeY;
-        draggedItemY.value = e.translationY;
+        if (draggedIndex.value >= 0) {
+          itemsY[draggedIndex.value].value = e.translationY;
+        }
         gestureState.value = e.state;
       }
     },
     onActive: (e, ctx) => {
       if (state.value !== ReorderableListState.RELEASING) {
         currentY.value = ctx.startY + e.translationY;
-        draggedItemY.value = e.translationY + dragScrollTranslationY.value;
+        if (draggedIndex.value >= 0) {
+          itemsY[draggedIndex.value].value =
+            e.translationY + dragScrollTranslationY.value;
+        }
         gestureState.value = e.state;
       }
     },
@@ -119,10 +133,9 @@ const ReorderableList = <T,>(
     onFail: (e) => (gestureState.value = e.state),
   });
 
-  const setDragEnabled = useCallback(
-    (enabled: boolean) => {
-      flatList.current?.setNativeProps({scrollEnabled: !enabled});
-      setDragged(enabled);
+  const setScrollEnabled = useCallback(
+    (scrollEnabled: boolean) => {
+      flatList.current?.setNativeProps({scrollEnabled});
     },
     [flatList],
   );
@@ -131,7 +144,7 @@ const ReorderableList = <T,>(
     if (fromIndex !== toIndex) {
       const updateState = () => {
         onReorder({fromIndex, toIndex});
-        setDragEnabled(false);
+        setScrollEnabled(true);
       };
 
       if (!hasAutomaticBatching) {
@@ -140,28 +153,18 @@ const ReorderableList = <T,>(
         updateState();
       }
     } else {
-      setDragEnabled(false);
+      setScrollEnabled(true);
     }
 
+    itemsY[draggedIndex.value].value = 0;
     draggedIndex.value = -1;
     currentIndex.value = -1;
-    draggedItemY.value = 0;
     state.value = ReorderableListState.IDLE;
     dragScrollTranslationY.value = 0;
   };
 
-  const getIndexFromY = (y: number, scrollY?: number) => {
-    'worklet';
-
-    const maxOffset = itemOffsets[itemOffsets.length - 1].value;
-    const relativeY = Math.max(
-      0,
-      Math.min(
-        (scrollY || currentScrollOffsetY.value) + y,
-        maxOffset.offset + maxOffset.length,
-      ),
-    );
-
+  const getIndexFromY = useWorkletCallback((y: number, scrollY?: number) => {
+    const relativeY = (scrollY || currentScrollOffsetY.value) + y;
     const index = itemOffsets.findIndex(
       (x, i) =>
         (x.value.offset && i === 0 && relativeY < x.value.offset) ||
@@ -170,8 +173,8 @@ const ReorderableList = <T,>(
           relativeY <= x.value.offset + x.value.length),
     );
 
-    return {index, relativeY};
-  };
+    return index;
+  });
 
   useAnimatedReaction(
     () => gestureState.value,
@@ -196,32 +199,17 @@ const ReorderableList = <T,>(
           itemOffsets[draggedIndex.value].value.offset +
           offsetCorrection;
 
-        draggedItemScale.value = withTiming(
-          1,
+        // animate dragged item to its new position on release
+        itemsY[draggedIndex.value].value = withTiming(
+          newTopPosition,
           {
             duration: animationDuration,
             easing: Easing.out(Easing.ease),
           },
           () => {
-            if (draggedItemY.value === newTopPosition) {
-              runOnJS(reorder)(draggedIndex.value, currentIndex.value);
-            }
+            runOnJS(reorder)(draggedIndex.value, currentIndex.value);
           },
         );
-
-        if (draggedItemY.value !== newTopPosition) {
-          // animate dragged item to its new position on release
-          draggedItemY.value = withTiming(
-            newTopPosition,
-            {
-              duration: animationDuration,
-              easing: Easing.out(Easing.ease),
-            },
-            () => {
-              runOnJS(reorder)(draggedIndex.value, currentIndex.value);
-            },
-          );
-        }
       }
     },
   );
@@ -233,149 +221,109 @@ const ReorderableList = <T,>(
         state.value === ReorderableListState.DRAGGING ||
         state.value === ReorderableListState.AUTO_SCROLL
       ) {
-        const {index} = getIndexFromY(y);
+        const index = getIndexFromY(y);
         currentIndex.value = index;
 
         if (y <= topAutoscrollArea.value || y >= bottomAutoscrollArea.value) {
+          if (state.value !== ReorderableListState.AUTO_SCROLL) {
+            // trigger autoscroll
+            lastAutoscrollTrigger.value = autoscrollTrigger.value;
+            autoscrollTrigger.value *= -1;
+          }
           state.value = ReorderableListState.AUTO_SCROLL;
-          autoscrollOffset.value = currentScrollOffsetY.value;
         } else {
           state.value = ReorderableListState.DRAGGING;
-          autoscrollOffset.value = -1;
         }
       }
     },
   );
 
   useAnimatedReaction(
-    () => autoscrollOffset.value,
+    () => autoscrollTrigger.value,
     () => {
-      if (state.value === ReorderableListState.AUTO_SCROLL) {
-        let speed = 0;
-        if (currentY.value <= topAutoscrollArea.value) {
-          speed = -scrollSpeed.value;
-        } else if (currentY.value >= bottomAutoscrollArea.value) {
-          speed = scrollSpeed.value;
-        }
+      if (
+        autoscrollTrigger.value !== lastAutoscrollTrigger.value &&
+        state.value === ReorderableListState.AUTO_SCROLL
+      ) {
+        const autoscrollIncrement =
+          (currentY.value <= topAutoscrollArea.value
+            ? -AUTOSCROLL_INCREMENT
+            : AUTOSCROLL_INCREMENT) * autoscrollSpeed;
 
-        if (speed !== 0) {
-          scrollTo(flatList, 0, autoscrollOffset.value + speed, true);
-          autoscrollOffset.value += speed;
+        if (autoscrollIncrement !== 0) {
+          const newScrollOffset =
+            animatedScrollOffset.value + autoscrollIncrement;
+          animatedScrollOffset.value = newScrollOffset;
+          scrollTo(flatList, 0, newScrollOffset, true);
+
+          lastAutoscrollTrigger.value = autoscrollTrigger.value;
+          autoscrollTrigger.value = withDelay(
+            AUTOSCROLL_DELAY,
+            withTiming(autoscrollTrigger.value * -1, {
+              duration: 0,
+            }),
+          );
         }
 
         // when autoscrolling user may not be moving his finger so we need
         // to update the current position of the dragged item here
-        const {index} = getIndexFromY(currentY.value, autoscrollOffset.value);
+        const index = getIndexFromY(currentY.value, currentScrollOffsetY.value);
         currentIndex.value = index;
       }
     },
   );
 
-  const scrollHandler = useAnimatedScrollHandler((e) => {
-    lastScrollOffsetY.value = currentScrollOffsetY.value;
+  const handleScroll = useAnimatedScrollHandler((e) => {
     currentScrollOffsetY.value = e.contentOffset.y;
 
     if (state.value === ReorderableListState.AUTO_SCROLL) {
-      draggedItemY.value +=
-        currentScrollOffsetY.value - lastScrollOffsetY.value;
+      dragScrollTranslationY.value =
+        currentScrollOffsetY.value - dragInitialScrollOffsetY.value;
     }
-
-    dragScrollTranslationY.value =
-      state.value === ReorderableListState.AUTO_SCROLL ||
-      state.value === ReorderableListState.DRAGGING
-        ? currentScrollOffsetY.value - dragInitialScrollOffsetY.value
-        : 0;
 
     if (onScroll) {
       onScroll(e);
     }
   });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const handleItemLayout = useCallback(
-    memoize((index: number) => (e: LayoutChangeEvent) => {
-      itemOffsets[index].value = {
-        offset: e.nativeEvent.layout.y,
-        length: e.nativeEvent.layout.height,
-      };
-    }),
-    [itemOffsets],
-  );
-
-  const startDrag = useCallback(
+  const startDrag = useWorkletCallback(
     (index: number) => {
-      'worklet';
-
+      draggedHeight.value = itemOffsets[index].value.length;
+      dragged[index].value = true;
       draggedIndex.value = index;
       currentIndex.value = index;
       state.value = ReorderableListState.DRAGGING;
       dragInitialScrollOffsetY.value = currentScrollOffsetY.value;
 
-      draggedItemScale.value = withTiming(dragScale, {
-        duration: animationDuration,
-        easing: Easing.out(Easing.ease),
-      });
-
-      runOnJS(setDragEnabled)(true);
+      runOnJS(setScrollEnabled)(false);
     },
-    [
-      draggedIndex,
-      currentIndex,
-      state,
-      draggedItemScale,
-      dragInitialScrollOffsetY,
-      currentScrollOffsetY,
-      dragScale,
-      animationDuration,
-      setDragEnabled,
-    ],
-  );
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const drag = useCallback(
-    memoize((index: number) => () => runOnUI(startDrag)(index)),
-    [startDrag],
+    [setScrollEnabled],
   );
 
   const renderAnimatedCell = useCallback(
-    ({index, children, ...cellProps}: CellProps<T>) => (
-      <ReorderableListItem
+    ({
+      index,
+      children,
+      item,
+      onLayout: onCellLayout,
+      parentProps,
+      keyExtractor,
+    }: CellProps<T>) => (
+      <ReorderableListCell
         // forces remount of components with key change
-        key={
-          cellProps.keyExtractor
-            ? cellProps.keyExtractor(cellProps.data[index], index)
-            : index
-        }
+        key={keyExtractor ? keyExtractor(item, index) : index}
+        item={item}
+        extraData={parentProps.extraData}
         index={index}
-        animationDuration={animationDuration}
-        currentIndex={currentIndex}
+        CellRendererComponent={CellRendererComponent}
         draggedIndex={draggedIndex}
         itemOffsets={itemOffsets}
-        draggedItemY={draggedItemY}
-        draggedItemScale={draggedItemScale}
-        onLayout={handleItemLayout(index)}>
-        {children}
-      </ReorderableListItem>
+        startDrag={startDrag}
+        children={children}
+        onLayout={onCellLayout}
+      />
     ),
-    [
-      currentIndex,
-      draggedIndex,
-      itemOffsets,
-      draggedItemY,
-      draggedItemScale,
-      animationDuration,
-      handleItemLayout,
-    ],
-  );
-
-  const renderDraggableItem = useCallback(
-    (info: ListRenderItemInfo<T>) =>
-      renderItem({
-        ...info,
-        drag: drag(info.index),
-        isDragged: dragged && draggedIndex.value === info.index,
-      }),
-    [renderItem, drag, dragged, draggedIndex],
+    [draggedIndex, itemOffsets, startDrag, CellRendererComponent],
   );
 
   const handleContainerLayout = () => {
@@ -385,50 +333,66 @@ const ReorderableList = <T,>(
     });
   };
 
-  const handleFlatListLayout = (e: LayoutChangeEvent) => {
-    const {height} = e.nativeEvent.layout;
-    const area = height * Math.max(0, Math.min(autoscrollArea, 0.5));
+  const handleFlatListLayout = useCallback(
+    (e: LayoutChangeEvent) => {
+      const {height} = e.nativeEvent.layout;
+      const area = height * Math.max(0, Math.min(autoscrollArea, 0.5));
 
-    topAutoscrollArea.value = area;
-    bottomAutoscrollArea.value = height - area;
+      topAutoscrollArea.value = area;
+      bottomAutoscrollArea.value = height - area;
 
-    flatListHeight.value = height;
+      flatListHeight.value = height;
 
-    if (onLayout) {
-      onLayout(e);
-    }
+      if (onLayout) {
+        onLayout(e);
+      }
+    },
+    [
+      autoscrollArea,
+      bottomAutoscrollArea,
+      flatListHeight,
+      onLayout,
+      topAutoscrollArea,
+    ],
+  );
+
+  const handleRef = (value: FlatList<T>) => {
+    setForwardedRef(ref, value);
+    setForwardedRef(flatList, value);
   };
 
   return (
-    <PanGestureHandler
-      maxPointers={1}
-      onGestureEvent={handleGestureEvent}
-      onHandlerStateChange={handleGestureEvent}
-      simultaneousHandlers={nativeHandler}>
-      <Animated.View
-        ref={container}
-        style={containerStyle}
-        onLayout={handleContainerLayout}>
-        <NativeViewGestureHandler ref={nativeHandler}>
-          <AnimatedFlatList
-            {...rest}
-            ref={composeRefs(flatList, ref)}
-            data={data}
-            CellRendererComponent={renderAnimatedCell}
-            renderItem={renderDraggableItem}
-            onLayout={handleFlatListLayout}
-            onScroll={scrollHandler}
-            keyExtractor={keyExtractor}
-            scrollEventThrottle={1}
-            horizontal={false}
-            removeClippedSubviews={false}
-          />
-        </NativeViewGestureHandler>
-      </Animated.View>
-    </PanGestureHandler>
+    <ReorderableCellContext.Provider value={reorderableCellContextValue}>
+      <PanGestureHandler
+        maxPointers={1}
+        onGestureEvent={handleGestureEvent}
+        onHandlerStateChange={handleGestureEvent}
+        simultaneousHandlers={nativeHandler}>
+        <Animated.View
+          ref={container}
+          style={containerStyle}
+          onLayout={handleContainerLayout}>
+          <NativeViewGestureHandler ref={nativeHandler}>
+            <AnimatedFlatList
+              {...rest}
+              ref={handleRef}
+              data={data}
+              CellRendererComponent={renderAnimatedCell}
+              onLayout={handleFlatListLayout}
+              onScroll={handleScroll}
+              scrollEventThrottle={1}
+              horizontal={false}
+              removeClippedSubviews={false}
+            />
+          </NativeViewGestureHandler>
+        </Animated.View>
+      </PanGestureHandler>
+    </ReorderableCellContext.Provider>
   );
 };
 
 export default React.memo(React.forwardRef(ReorderableList)) as <T>(
-  props: ReorderableListProps<T> & {ref?: React.ForwardedRef<FlatListProps<T>>},
+  props: ReorderableListProps<T> & {
+    ref?: React.ForwardedRef<FlatListProps<T>>;
+  },
 ) => React.ReactElement;
