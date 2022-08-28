@@ -29,7 +29,8 @@ type OmittedProps =
   | 'horizontal'
   | 'onScroll'
   | 'scrollEventThrottle'
-  | 'removeClippedSubviews';
+  | 'removeClippedSubviews'
+  | 'CellRendererComponent';
 
 export interface ReorderableListProps<T>
   extends Omit<FlatListProps<T>, OmittedProps> {

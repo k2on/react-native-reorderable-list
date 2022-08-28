@@ -28,7 +28,7 @@ import Animated, {
 
 import ReorderableListCell from '@library/components/ReorderableListCell';
 import useAnimatedSharedValues from '@library/hooks/useAnimatedSharedValues';
-import {ReorderableCellContext} from '@library/hooks/useReorderableCell';
+import ReorderableCellContext from '@library/context/ReorderableCellContext';
 import {ItemOffset, ReorderableListState} from '@library/types/misc';
 import {CellProps, ReorderableListProps} from '@library/types/props';
 import {setForwardedRef} from '@library/utils/setForwardedRef';
@@ -51,7 +51,6 @@ const ReorderableList = <T,>(
     autoscrollArea = 0.1,
     autoscrollSpeed = 1,
     animationDuration = 100,
-    CellRendererComponent,
     onLayout,
     onReorder,
     onScroll,
@@ -315,7 +314,6 @@ const ReorderableList = <T,>(
         item={item}
         extraData={parentProps.extraData}
         index={index}
-        CellRendererComponent={CellRendererComponent}
         draggedIndex={draggedIndex}
         itemOffsets={itemOffsets}
         startDrag={startDrag}
@@ -323,7 +321,7 @@ const ReorderableList = <T,>(
         onLayout={onCellLayout}
       />
     ),
-    [draggedIndex, itemOffsets, startDrag, CellRendererComponent],
+    [draggedIndex, itemOffsets, startDrag],
   );
 
   const handleContainerLayout = () => {

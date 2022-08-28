@@ -1,26 +1,23 @@
-import React, {useContext} from 'react';
+import {useContext} from 'react';
 import Animated, {
-  withTiming,
   Easing,
-  useSharedValue,
   useAnimatedReaction,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 
-import {DraggedContext} from '@library/hooks/useDragSharedValue';
+import ReorderableCellContext from '@library/context/ReorderableCellContext';
 
-interface ReorderableCellContextData {
-  animationDuration: number;
-  draggedHeight: Animated.SharedValue<number>;
-  currentIndex: Animated.SharedValue<number>;
-  itemsY: Animated.SharedValue<number>[];
-  dragged: Animated.SharedValue<boolean>[];
+interface UseAnimatedCellStyleArgs {
+  index: number;
+  draggedIndex: Animated.SharedValue<number>;
 }
 
-export const ReorderableCellContext =
-  React.createContext<ReorderableCellContextData>(undefined as any);
-
-const useReorderableCell = () => {
-  const {draggedIndex, index} = useContext(DraggedContext);
+const useAnimatedCellStyle = ({
+  index,
+  draggedIndex,
+}: UseAnimatedCellStyleArgs) => {
   const {animationDuration, currentIndex, itemsY, draggedHeight, dragged} =
     useContext(ReorderableCellContext);
 
@@ -66,7 +63,12 @@ const useReorderableCell = () => {
     },
   );
 
-  return {animationDuration, zIndex, positionY, dragY};
+  return useAnimatedStyle(() => {
+    return {
+      zIndex: zIndex.value,
+      transform: [{translateY: dragY.value}, {translateY: positionY.value}],
+    };
+  });
 };
 
-export default useReorderableCell;
+export default useAnimatedCellStyle;

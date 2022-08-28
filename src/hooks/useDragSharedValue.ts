@@ -1,16 +1,7 @@
-import React, {useContext} from 'react';
-import Animated from 'react-native-reanimated';
+import {useContext} from 'react';
 
-import {ReorderableCellContext} from '@library/hooks/useReorderableCell';
-
-interface DraggedContextData {
-  index: number;
-  draggedIndex: Animated.SharedValue<number>;
-}
-
-export const DraggedContext = React.createContext<DraggedContextData>(
-  undefined as any,
-);
+import ReorderableCellContext from '@library/context/ReorderableCellContext';
+import DraggedContext from '@library/context/DraggedContext';
 
 const useDragSharedValue = () => {
   const {index} = useContext(DraggedContext);

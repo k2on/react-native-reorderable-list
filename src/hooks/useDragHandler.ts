@@ -1,6 +1,6 @@
-import React, {useContext} from 'react';
+import {useContext} from 'react';
 
-export const DragContext = React.createContext<() => void>(undefined as any);
+import DragContext from '@library/context/DragContext';
 
 const useDragHandler = () => {
   const dragHandler = useContext(DragContext);

@@ -2,14 +2,13 @@ import React, {useMemo} from 'react';
 import {LayoutChangeEvent} from 'react-native';
 import Animated, {useWorkletCallback} from 'react-native-reanimated';
 
-import ScaleOpacityCell from '@library/components/ScaleOpacityCell';
-import {DragContext} from '@library/hooks/useDragHandler';
-import {DraggedContext} from '@library/hooks/useDragSharedValue';
+import DragContext from '@library/context/DragContext';
+import DraggedContext from '@library/context/DraggedContext';
+import useAnimatedCellStyle from '@library/hooks/useAnimatedCellStyle';
 import {ItemOffset} from '@library/types/misc';
 
 interface ReorderableListCellProps {
   index: number;
-  CellRendererComponent: React.ComponentType<any> | undefined;
   startDrag: (index: number) => void;
   draggedIndex: Animated.SharedValue<number>;
   itemOffsets: Animated.SharedValue<ItemOffset>[];
@@ -21,7 +20,6 @@ interface ReorderableListCellProps {
 }
 
 const ReorderableListCell: React.FC<ReorderableListCellProps> = ({
-  CellRendererComponent,
   index,
   draggedIndex,
   itemOffsets,
@@ -35,6 +33,11 @@ const ReorderableListCell: React.FC<ReorderableListCellProps> = ({
     [index, draggedIndex],
   );
 
+  const style = useAnimatedCellStyle({
+    index,
+    draggedIndex,
+  });
+
   const handleLayout = (e: LayoutChangeEvent) => {
     itemOffsets[index].value = {
       offset: e.nativeEvent.layout.y,
@@ -46,12 +49,12 @@ const ReorderableListCell: React.FC<ReorderableListCellProps> = ({
     }
   };
 
-  const CellRenderer = CellRendererComponent || ScaleOpacityCell;
-
   return (
     <DragContext.Provider value={drag}>
       <DraggedContext.Provider value={draggedContextValue}>
-        <CellRenderer onLayout={handleLayout} children={children} />
+        <Animated.View style={style} onLayout={handleLayout}>
+          {children}
+        </Animated.View>
       </DraggedContext.Provider>
     </DragContext.Provider>
   );

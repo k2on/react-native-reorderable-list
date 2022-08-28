@@ -7,19 +7,17 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import useDragSharedValue from '@library/hooks/useDragSharedValue';
-import useReorderableCell from '@library/hooks/useReorderableCell';
 
-interface AnimatedOpacityCellProps extends ViewProps {
+interface AnimatedScaleOpacityProps extends ViewProps {
   opacity?: number;
   scale?: number;
 }
 
-const ScaleOpacityCell: React.FC<AnimatedOpacityCellProps> = ({
+const AnimatedScaleOpacity: React.FC<AnimatedScaleOpacityProps> = ({
   opacity = 0.75,
   scale = 1.025,
   ...rest
 }) => {
-  const {animationDuration, zIndex, dragY, positionY} = useReorderableCell();
   const isDragged = useDragSharedValue();
 
   const style = useAnimatedStyle(() => {
@@ -27,16 +25,13 @@ const ScaleOpacityCell: React.FC<AnimatedOpacityCellProps> = ({
 
     return {
       opacity: withTiming(dragged ? opacity : 1, {
-        duration: animationDuration,
+        duration: 200,
         easing: Easing.out(Easing.ease),
       }),
-      zIndex: zIndex.value,
       transform: [
-        {translateY: dragY.value},
-        {translateY: positionY.value},
         {
           scale: withTiming(dragged ? scale : 1, {
-            duration: animationDuration,
+            duration: 200,
             easing: Easing.out(Easing.ease),
           }),
         },
@@ -47,4 +42,4 @@ const ScaleOpacityCell: React.FC<AnimatedOpacityCellProps> = ({
   return <Animated.View {...rest} style={[rest.style, style]} />;
 };
 
-export default ScaleOpacityCell;
+export default AnimatedScaleOpacity;
