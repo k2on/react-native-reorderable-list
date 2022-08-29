@@ -1,8 +1,7 @@
 import ReorderableList from '@library/components/ReorderableList';
 import AnimatedScaleOpacity from '@library/components/AnimatedScaleOpacity';
 import useDragHandler from '@library/hooks/useDragHandler';
-import useDragSharedValue from '@library/hooks/useDragSharedValue';
-import useDragState from '@library/hooks/useDragState';
+import useAnimatedDrag from '@library/hooks/useAnimatedDrag';
 import {
   ReorderableListProps,
   ReorderableListReorderEvent,
@@ -10,8 +9,7 @@ import {
 
 export {
   useDragHandler,
-  useDragSharedValue,
-  useDragState,
+  useAnimatedDrag,
   ReorderableListProps,
   ReorderableListReorderEvent,
   AnimatedScaleOpacity,

@@ -33,6 +33,11 @@ import {ItemOffset, ReorderableListState} from '@library/types/misc';
 import {CellProps, ReorderableListProps} from '@library/types/props';
 import {setForwardedRef} from '@library/utils/setForwardedRef';
 import {AUTOSCROLL_INCREMENT, AUTOSCROLL_DELAY} from '@library/consts';
+import SetHandlersContext, {
+  DragHandlers,
+  RemoveHanldersFunc,
+  SetHandlersFunc,
+} from '@library/context/SetHandlersContext';
 
 const version = React.version.split('.');
 const hasAutomaticBatching =
@@ -96,6 +101,28 @@ const ReorderableList = <T,>(
     [animationDuration, draggedHeight, currentIndex, itemsY, dragged],
   );
 
+  const itemHandlers = useAnimatedSharedValues<(DragHandlers | undefined)[]>(
+    () => [],
+    data.length,
+  );
+  const setHandlers: SetHandlersFunc = useCallback(
+    (index, handlers) => {
+      itemHandlers[index].value = [...itemHandlers[index].value, handlers];
+      return itemHandlers[index].value.length;
+    },
+    [itemHandlers],
+  );
+  const removeHandlers: RemoveHanldersFunc = useCallback(
+    (index, handlersRef) => {
+      itemHandlers[index].value[handlersRef] = undefined;
+    },
+    [itemHandlers],
+  );
+  const setHandlersContextValue = useMemo(
+    () => ({setHandlers, removeHandlers}),
+    [setHandlers, removeHandlers],
+  );
+
   const handleGestureEvent = useAnimatedGestureHandler<
     PanGestureHandlerGestureEvent,
     {startY: number}
@@ -156,6 +183,7 @@ const ReorderableList = <T,>(
     }
 
     itemsY[draggedIndex.value].value = 0;
+    dragged[draggedIndex.value].value = false;
     draggedIndex.value = -1;
     currentIndex.value = -1;
     state.value = ReorderableListState.IDLE;
@@ -185,6 +213,9 @@ const ReorderableList = <T,>(
           state.value === ReorderableListState.AUTO_SCROLL)
       ) {
         state.value = ReorderableListState.RELEASING;
+
+        // call release handlers
+        itemHandlers[draggedIndex.value].value.forEach((x) => x?.release());
 
         // if items have different heights and the dragged item is moved forward
         // then its new offset position needs to be adjusted
@@ -361,30 +392,32 @@ const ReorderableList = <T,>(
 
   return (
     <ReorderableCellContext.Provider value={reorderableCellContextValue}>
-      <PanGestureHandler
-        maxPointers={1}
-        onGestureEvent={handleGestureEvent}
-        onHandlerStateChange={handleGestureEvent}
-        simultaneousHandlers={nativeHandler}>
-        <Animated.View
-          ref={container}
-          style={containerStyle}
-          onLayout={handleContainerLayout}>
-          <NativeViewGestureHandler ref={nativeHandler}>
-            <AnimatedFlatList
-              {...rest}
-              ref={handleRef}
-              data={data}
-              CellRendererComponent={renderAnimatedCell}
-              onLayout={handleFlatListLayout}
-              onScroll={handleScroll}
-              scrollEventThrottle={1}
-              horizontal={false}
-              removeClippedSubviews={false}
-            />
-          </NativeViewGestureHandler>
-        </Animated.View>
-      </PanGestureHandler>
+      <SetHandlersContext.Provider value={setHandlersContextValue}>
+        <PanGestureHandler
+          maxPointers={1}
+          onGestureEvent={handleGestureEvent}
+          onHandlerStateChange={handleGestureEvent}
+          simultaneousHandlers={nativeHandler}>
+          <Animated.View
+            ref={container}
+            style={containerStyle}
+            onLayout={handleContainerLayout}>
+            <NativeViewGestureHandler ref={nativeHandler}>
+              <AnimatedFlatList
+                {...rest}
+                ref={handleRef}
+                data={data}
+                CellRendererComponent={renderAnimatedCell}
+                onLayout={handleFlatListLayout}
+                onScroll={handleScroll}
+                scrollEventThrottle={1}
+                horizontal={false}
+                removeClippedSubviews={false}
+              />
+            </NativeViewGestureHandler>
+          </Animated.View>
+        </PanGestureHandler>
+      </SetHandlersContext.Provider>
     </ReorderableCellContext.Provider>
   );
 };
