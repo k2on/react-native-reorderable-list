@@ -17,9 +17,13 @@ const useAnimatedDrag = (
   const {index} = useContext(DraggedContext);
   const {setHandlers, removeHandlers} = useContext(SetHandlersContext);
 
-  const start = useWorkletCallback(onStart || (() => null), deps);
-  const release = useWorkletCallback(onRelease || (() => null), deps);
-  const end = useWorkletCallback(onEnd || (() => null), deps);
+  // TODO: can be improved?
+  const emptyWorklet = () => {
+    'worklet';
+  };
+  const start = useWorkletCallback(onStart || emptyWorklet, deps);
+  const release = useWorkletCallback(onRelease || emptyWorklet, deps);
+  const end = useWorkletCallback(onEnd || emptyWorklet, deps);
 
   useEffect(() => {
     const handlersRef = setHandlers(index, {start, release, end});
