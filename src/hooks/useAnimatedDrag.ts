@@ -1,8 +1,9 @@
-import {useContext, useEffect} from 'react';
+import {useEffect} from 'react';
 import {useWorkletCallback} from 'react-native-reanimated';
 
 import DraggedContext from '@library/context/DraggedContext';
 import HandlersContext from '@library/context/HandlersContext';
+import useLibraryContext from '@library/hooks/useLibraryContext';
 
 interface UseAnimatedDragHandlers {
   onStart?: () => void;
@@ -18,8 +19,8 @@ const useAnimatedDrag = (
   {onStart, onRelease, onEnd}: UseAnimatedDragHandlers,
   deps?: ReadonlyArray<any>,
 ) => {
-  const {index} = useContext(DraggedContext);
-  const {setHandlers, removeHandlers} = useContext(HandlersContext);
+  const {index} = useLibraryContext(DraggedContext);
+  const {setHandlers, removeHandlers} = useLibraryContext(HandlersContext);
 
   // TODO: can be improved?
   const start = useWorkletCallback(onStart || emptyWorklet, deps);

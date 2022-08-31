@@ -6,8 +6,8 @@ interface DraggedContextData {
   draggedIndex: Animated.SharedValue<number>;
 }
 
-const DraggedContext = React.createContext<DraggedContextData>(
-  undefined as any,
+const DraggedContext = React.createContext<DraggedContextData | undefined>(
+  undefined,
 );
 
 export default DraggedContext;

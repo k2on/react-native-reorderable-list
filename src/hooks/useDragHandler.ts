@@ -1,9 +1,8 @@
-import {useContext} from 'react';
-
 import DragContext from '@library/context/DragContext';
+import useLibraryContext from '@library/hooks/useLibraryContext';
 
 const useDragHandler = () => {
-  const dragHandler = useContext(DragContext);
+  const dragHandler = useLibraryContext(DragContext);
   return dragHandler;
 };
 

@@ -9,8 +9,8 @@ interface ReorderableCellContextData {
   dragged: Animated.SharedValue<boolean>[];
 }
 
-const ReorderableCellContext = React.createContext<ReorderableCellContextData>(
-  undefined as any,
-);
+const ReorderableCellContext = React.createContext<
+  ReorderableCellContextData | undefined
+>(undefined);
 
 export default ReorderableCellContext;
