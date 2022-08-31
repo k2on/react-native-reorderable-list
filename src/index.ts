@@ -1,5 +1,5 @@
 import ReorderableList from '@library/components/ReorderableList';
-import AnimatedScaleOpacity from '@library/components/AnimatedScaleOpacity';
+import ReorderableAnimation from '@library/components/ReorderableAnimation';
 import useDragHandler from '@library/hooks/useDragHandler';
 import useAnimatedDrag from '@library/hooks/useAnimatedDrag';
 import {
@@ -12,6 +12,6 @@ export {
   useAnimatedDrag,
   ReorderableListProps,
   ReorderableListReorderEvent,
-  AnimatedScaleOpacity,
+  ReorderableAnimation,
 };
 export default ReorderableList;

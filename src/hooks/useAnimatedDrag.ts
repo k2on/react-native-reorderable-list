@@ -10,6 +10,10 @@ interface UseAnimatedDragHandlers {
   onEnd?: () => void;
 }
 
+const emptyWorklet = () => {
+  'worklet';
+};
+
 const useAnimatedDrag = (
   {onStart, onRelease, onEnd}: UseAnimatedDragHandlers,
   deps?: ReadonlyArray<any>,
@@ -18,9 +22,6 @@ const useAnimatedDrag = (
   const {setHandlers, removeHandlers} = useContext(SetHandlersContext);
 
   // TODO: can be improved?
-  const emptyWorklet = () => {
-    'worklet';
-  };
   const start = useWorkletCallback(onStart || emptyWorklet, deps);
   const release = useWorkletCallback(onRelease || emptyWorklet, deps);
   const end = useWorkletCallback(onEnd || emptyWorklet, deps);
