@@ -34,10 +34,10 @@ import {CellProps, ReorderableListProps} from '@library/types/props';
 import {setForwardedRef} from '@library/utils/setForwardedRef';
 import {AUTOSCROLL_INCREMENT, AUTOSCROLL_DELAY} from '@library/consts';
 import SetHandlersContext, {
-  DragHandlers,
-  RemoveHanldersFunc,
+  Handlers,
+  RemoveHandlersFunc,
   SetHandlersFunc,
-} from '@library/context/SetHandlersContext';
+} from '@library/context/HandlersContext';
 
 const version = React.version.split('.');
 const hasAutomaticBatching =
@@ -89,7 +89,7 @@ const ReorderableList = <T,>(
   const draggedIndex = useSharedValue(-1);
   const dragged = useAnimatedSharedValues(() => false, data.length);
   const state = useSharedValue<ReorderableListState>(ReorderableListState.IDLE);
-  const itemHandlers = useAnimatedSharedValues<(DragHandlers | undefined)[]>(
+  const itemHandlers = useAnimatedSharedValues<(Handlers | undefined)[]>(
     () => [],
     data.length,
   );
@@ -112,7 +112,7 @@ const ReorderableList = <T,>(
     },
     [itemHandlers],
   );
-  const removeHandlers: RemoveHanldersFunc = useCallback(
+  const removeHandlers: RemoveHandlersFunc = useCallback(
     (index, handlersRef) => {
       itemHandlers[index].value[handlersRef] = undefined;
     },
