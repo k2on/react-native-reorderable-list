@@ -89,6 +89,10 @@ const ReorderableList = <T,>(
   const draggedIndex = useSharedValue(-1);
   const dragged = useAnimatedSharedValues(() => false, data.length);
   const state = useSharedValue<ReorderableListState>(ReorderableListState.IDLE);
+  const itemHandlers = useAnimatedSharedValues<(DragHandlers | undefined)[]>(
+    () => [],
+    data.length,
+  );
 
   const reorderableCellContextValue = useMemo(
     () => ({
@@ -101,10 +105,6 @@ const ReorderableList = <T,>(
     [animationDuration, draggedHeight, currentIndex, itemsY, dragged],
   );
 
-  const itemHandlers = useAnimatedSharedValues<(DragHandlers | undefined)[]>(
-    () => [],
-    data.length,
-  );
   const setHandlers: SetHandlersFunc = useCallback(
     (index, handlers) => {
       itemHandlers[index].value = [...itemHandlers[index].value, handlers];
@@ -182,12 +182,17 @@ const ReorderableList = <T,>(
       setScrollEnabled(true);
     }
 
+    const draggedIndexCopy = draggedIndex.value;
+
     itemsY[draggedIndex.value].value = 0;
     dragged[draggedIndex.value].value = false;
     draggedIndex.value = -1;
     currentIndex.value = -1;
     state.value = ReorderableListState.IDLE;
     dragScrollTranslationY.value = 0;
+
+    // call on end handlers
+    itemHandlers[draggedIndexCopy].value.forEach((x) => x?.end());
   };
 
   const getIndexFromY = useWorkletCallback((y: number, scrollY?: number) => {
@@ -214,7 +219,7 @@ const ReorderableList = <T,>(
       ) {
         state.value = ReorderableListState.RELEASING;
 
-        // call release handlers
+        // call on release handlers
         itemHandlers[draggedIndex.value].value.forEach((x) => x?.release());
 
         // if items have different heights and the dragged item is moved forward
@@ -324,6 +329,9 @@ const ReorderableList = <T,>(
       currentIndex.value = index;
       state.value = ReorderableListState.DRAGGING;
       dragInitialScrollOffsetY.value = currentScrollOffsetY.value;
+
+      // call on start drag handlers
+      itemHandlers[index].value.forEach((x) => x?.start());
 
       runOnJS(setScrollEnabled)(false);
     },
