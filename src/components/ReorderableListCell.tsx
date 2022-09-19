@@ -1,6 +1,6 @@
-import React, {useMemo} from 'react';
+import React, {useEffect, useMemo} from 'react';
 import {LayoutChangeEvent} from 'react-native';
-import Animated, {useWorkletCallback} from 'react-native-reanimated';
+import Animated, {cancelAnimation, useSharedValue, useWorkletCallback} from 'react-native-reanimated';
 
 import DragContext from '@library/context/DragContext';
 import DraggedContext from '@library/context/DraggedContext';
@@ -10,8 +10,9 @@ import {ItemOffset} from '@library/types/misc';
 interface ReorderableListCellProps {
   index: number;
   startDrag: (index: number) => void;
-  draggedIndex: Animated.SharedValue<number>;
-  itemOffsets: Animated.SharedValue<ItemOffset>[];
+  itemOffset: Animated.SharedValue<ItemOffset | undefined>;
+  dragY: Animated.SharedValue<number>,
+  itemDragged: Animated.SharedValue<boolean>,
   children: React.ReactNode;
   onLayout?: (e: LayoutChangeEvent) => void;
   // TODO: set type
@@ -21,25 +22,27 @@ interface ReorderableListCellProps {
 
 const ReorderableListCell: React.FC<ReorderableListCellProps> = ({
   index,
-  draggedIndex,
-  itemOffsets,
-  children,
   startDrag,
+  children,
   onLayout,
+  itemOffset,
+  dragY,
+  itemDragged,
 }) => {
   const drag = useWorkletCallback(() => startDrag(index), [index]);
   const draggedContextValue = useMemo(
-    () => ({index, draggedIndex}),
-    [index, draggedIndex],
+    () => ({index}),
+    [index],
   );
 
   const style = useAnimatedCellStyle({
     index,
-    draggedIndex,
+    dragY,
+    itemDragged,
   });
 
   const handleLayout = (e: LayoutChangeEvent) => {
-    itemOffsets[index].value = {
+    itemOffset.value = {
       offset: e.nativeEvent.layout.y,
       length: e.nativeEvent.layout.height,
     };

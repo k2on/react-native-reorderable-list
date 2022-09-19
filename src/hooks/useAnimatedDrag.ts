@@ -17,12 +17,12 @@ const emptyWorklet = () => {
 
 const useAnimatedDrag = (
   {onStart, onRelease, onEnd}: UseAnimatedDragHandlers,
-  deps?: ReadonlyArray<any>,
+  deps: ReadonlyArray<any> = [],
 ) => {
   const {index} = useLibraryContext(DraggedContext);
   const {setHandlers, removeHandlers} = useLibraryContext(HandlersContext);
 
-  // TODO: can be improved?
+  // TODO: can it be improved?
   const start = useWorkletCallback(onStart || emptyWorklet, deps);
   const release = useWorkletCallback(onRelease || emptyWorklet, deps);
   const end = useWorkletCallback(onEnd || emptyWorklet, deps);

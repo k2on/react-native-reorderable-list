@@ -11,21 +11,21 @@ import useLibraryContext from '@library/hooks/useLibraryContext';
 
 interface UseAnimatedCellStyleArgs {
   index: number;
-  draggedIndex: Animated.SharedValue<number>;
+  dragY: Animated.SharedValue<number>;
+  itemDragged: Animated.SharedValue<boolean>;
 }
 
 const useAnimatedCellStyle = ({
   index,
-  draggedIndex,
+  dragY,
+  itemDragged,
 }: UseAnimatedCellStyleArgs) => {
-  const {animationDuration, currentIndex, itemsY, draggedHeight, dragged} =
+  const {animationDuration, currentIndex, draggedIndex, draggedHeight} =
     useLibraryContext(ReorderableCellContext);
 
   const zIndex = useSharedValue(0);
   const positionY = useSharedValue(0);
   const itemIndex = useSharedValue(index);
-  const dragY = itemsY[index];
-  const itemDragged = dragged[index];
 
   useAnimatedReaction(
     () => currentIndex.value,
@@ -63,12 +63,12 @@ const useAnimatedCellStyle = ({
     },
   );
 
-  return useAnimatedStyle(() => {
-    return {
+  return useAnimatedStyle(
+    () => ({
       zIndex: zIndex.value,
       transform: [{translateY: dragY.value}, {translateY: positionY.value}],
-    };
-  });
+    }),
+  );
 };
 
 export default useAnimatedCellStyle;

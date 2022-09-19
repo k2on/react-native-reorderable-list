@@ -47,18 +47,20 @@ const AnimatedScale: React.FC<AnimatedScaleProps> = ({
         });
       },
     },
-    [startScale, endScale, easingStart, easingStart],
+    [startScale, endScale, easingStart, easingEnd],
   );
 
-  const style = useAnimatedStyle(() => ({
-    transform: [
-      {
-        scale: scale.value,
-      },
-    ],
-  }));
+  const style = useAnimatedStyle(
+    () => ({
+      transform: [
+        {
+          scale: scale.value,
+        },
+      ],
+    }),
+  );
 
-  return <Animated.View {...rest} style={[rest.style, style]} />;
+  return <Animated.View {...rest} style={[style, rest.style]} />;
 };
 
 export default AnimatedScale;

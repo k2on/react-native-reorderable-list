@@ -1,5 +1,6 @@
 import React, {useRef, useCallback, useMemo} from 'react';
 import {
+  View,
   FlatList,
   FlatListProps,
   LayoutChangeEvent,
@@ -99,10 +100,9 @@ const ReorderableList = <T,>(
       animationDuration,
       draggedHeight,
       currentIndex,
-      itemsY,
-      dragged,
+      draggedIndex,
     }),
-    [animationDuration, draggedHeight, currentIndex, itemsY, dragged],
+    [animationDuration, draggedHeight, currentIndex, draggedIndex],
   );
 
   const setHandlers: SetHandlersFunc = useCallback(
@@ -159,12 +159,9 @@ const ReorderableList = <T,>(
     onFail: (e) => (gestureState.value = e.state),
   });
 
-  const setScrollEnabled = useCallback(
-    (scrollEnabled: boolean) => {
-      flatList.current?.setNativeProps({scrollEnabled});
-    },
-    [flatList],
-  );
+  const setScrollEnabled = useCallback((scrollEnabled: boolean) => {
+    flatList.current?.setNativeProps({scrollEnabled});
+  }, []);
 
   const reorder = (fromIndex: number, toIndex: number) => {
     if (fromIndex !== toIndex) {
@@ -199,7 +196,7 @@ const ReorderableList = <T,>(
     const relativeY = (scrollY || currentScrollOffsetY.value) + y;
     const index = itemOffsets.findIndex(
       (x, i) =>
-        (x.value.offset && i === 0 && relativeY < x.value.offset) ||
+        (i === 0 && relativeY < x.value.offset) ||
         (i === itemOffsets.length - 1 && relativeY > x.value.offset) ||
         (relativeY >= x.value.offset &&
           relativeY <= x.value.offset + x.value.length),
@@ -217,6 +214,9 @@ const ReorderableList = <T,>(
         (state.value === ReorderableListState.DRAGGING ||
           state.value === ReorderableListState.AUTO_SCROLL)
       ) {
+        const currentOffset = itemOffsets[currentIndex.value].value;
+        const draggedOffset = itemOffsets[draggedIndex.value].value;
+
         state.value = ReorderableListState.RELEASING;
 
         // call on release handlers
@@ -226,13 +226,10 @@ const ReorderableList = <T,>(
         // then its new offset position needs to be adjusted
         const offsetCorrection =
           currentIndex.value > draggedIndex.value
-            ? itemOffsets[currentIndex.value].value.length -
-              itemOffsets[draggedIndex.value].value.length
+            ? currentOffset.length - draggedOffset.length
             : 0;
         const newTopPosition =
-          itemOffsets[currentIndex.value].value.offset -
-          itemOffsets[draggedIndex.value].value.offset +
-          offsetCorrection;
+          currentOffset.offset - draggedOffset.offset + offsetCorrection;
 
         // animate dragged item to its new position on release
         itemsY[draggedIndex.value].value = withTiming(
@@ -289,7 +286,8 @@ const ReorderableList = <T,>(
           const newScrollOffset =
             animatedScrollOffset.value + autoscrollIncrement;
           animatedScrollOffset.value = newScrollOffset;
-          scrollTo(flatList, 0, newScrollOffset, true);
+          // TODO: Fix type
+          scrollTo(flatList as any, 0, newScrollOffset, true);
 
           lastAutoscrollTrigger.value = autoscrollTrigger.value;
           autoscrollTrigger.value = withDelay(
@@ -353,8 +351,9 @@ const ReorderableList = <T,>(
         item={item}
         extraData={parentProps.extraData}
         index={index}
-        draggedIndex={draggedIndex}
-        itemOffsets={itemOffsets}
+        itemOffset={itemOffsets[index]}
+        dragY={itemsY[index]}
+        itemDragged={dragged[index]}
         startDrag={startDrag}
         children={children}
         onLayout={onCellLayout}
@@ -364,10 +363,13 @@ const ReorderableList = <T,>(
   );
 
   const handleContainerLayout = () => {
-    container.current?.measureInWindow((x: number, y: number) => {
-      containerPositionX.value = x;
-      containerPositionY.value = y;
-    });
+    // TODO: fix type
+    (container.current as unknown as View)?.measureInWindow(
+      (x: number, y: number) => {
+        containerPositionX.value = x;
+        containerPositionY.value = y;
+      },
+    );
   };
 
   const handleFlatListLayout = useCallback(
