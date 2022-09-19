@@ -2,7 +2,7 @@ import React, {useMemo} from 'react';
 import {LayoutChangeEvent} from 'react-native';
 import Animated, {useWorkletCallback} from 'react-native-reanimated';
 
-import ReorderableCellContext from '@library/context/ReorderableCellContext';
+import ReorderableCellContext from '@library/contexts/ReorderableCellContext';
 import useAnimatedCellStyle from '@library/hooks/useAnimatedCellStyle';
 import {ItemOffset} from '@library/types/misc';
 

@@ -29,7 +29,7 @@ import Animated, {
 
 import ReorderableListCell from '@library/components/ReorderableListCell';
 import useSharedValuesArray from '@library/hooks/useSharedValuesArray';
-import ReorderableListContext from '@library/context/ReorderableListContext';
+import ReorderableListContext from '@library/contexts/ReorderableListContext';
 import {ItemOffset, ReorderableListState} from '@library/types/misc';
 import {CellProps, ReorderableListProps} from '@library/types/props';
 import {setForwardedRef} from '@library/utils/setForwardedRef';
@@ -38,7 +38,7 @@ import HandlersContext, {
   Handlers,
   RemoveHandlersFunc,
   SetHandlersFunc,
-} from '@library/context/HandlersContext';
+} from '@library/contexts/HandlersContext';
 
 const version = React.version.split('.');
 const hasAutomaticBatching =

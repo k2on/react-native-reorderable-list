@@ -6,7 +6,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import ReorderableListContext from '@library/context/ReorderableListContext';
+import ReorderableListContext from '@library/contexts/ReorderableListContext';
 import useLibraryContext from '@library/hooks/useLibraryContext';
 
 interface UseAnimatedCellStyleArgs {

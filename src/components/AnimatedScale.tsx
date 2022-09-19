@@ -11,7 +11,7 @@ import Animated, {
 
 import useAnimatedDrag from '@library/hooks/useAnimatedDrag';
 import useLibraryContext from '@library/hooks/useLibraryContext';
-import ReorderableListContext from '@library/context/ReorderableListContext';
+import ReorderableListContext from '@library/contexts/ReorderableListContext';
 
 export interface AnimatedScaleProps extends ViewProps {
   startScale?: number;

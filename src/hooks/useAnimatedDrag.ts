@@ -1,9 +1,9 @@
 import {useEffect} from 'react';
 import {useWorkletCallback} from 'react-native-reanimated';
 
-import HandlersContext from '@library/context/HandlersContext';
+import HandlersContext from '@library/contexts/HandlersContext';
 import useLibraryContext from '@library/hooks/useLibraryContext';
-import ReorderableCellContext from '@library/context/ReorderableCellContext';
+import ReorderableCellContext from '@library/contexts/ReorderableCellContext';
 
 interface UseAnimatedDragHandlers {
   onStart?: () => void;
