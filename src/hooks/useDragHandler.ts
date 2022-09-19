@@ -1,8 +1,8 @@
-import DragContext from '@library/context/DragContext';
+import ReorderableCellContext from '@library/context/ReorderableCellContext';
 import useLibraryContext from '@library/hooks/useLibraryContext';
 
 const useDragHandler = () => {
-  const dragHandler = useLibraryContext(DragContext);
+  const {dragHandler} = useLibraryContext(ReorderableCellContext);
   return dragHandler;
 };
 

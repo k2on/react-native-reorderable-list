@@ -15,8 +15,8 @@ interface HandlersContextData {
   removeHandlers: RemoveHandlersFunc;
 }
 
-const SetHandlersContext = React.createContext<HandlersContextData | undefined>(
+const HandlersContext = React.createContext<HandlersContextData | undefined>(
   undefined,
 );
 
-export default SetHandlersContext;
+export default HandlersContext;

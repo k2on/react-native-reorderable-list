@@ -29,12 +29,12 @@ import Animated, {
 
 import ReorderableListCell from '@library/components/ReorderableListCell';
 import useAnimatedSharedValues from '@library/hooks/useAnimatedSharedValues';
-import ReorderableCellContext from '@library/context/ReorderableCellContext';
+import ReorderableListContext from '@library/context/ReorderableListContext';
 import {ItemOffset, ReorderableListState} from '@library/types/misc';
 import {CellProps, ReorderableListProps} from '@library/types/props';
 import {setForwardedRef} from '@library/utils/setForwardedRef';
 import {AUTOSCROLL_INCREMENT, AUTOSCROLL_DELAY} from '@library/consts';
-import SetHandlersContext, {
+import HandlersContext, {
   Handlers,
   RemoveHandlersFunc,
   SetHandlersFunc,
@@ -95,7 +95,7 @@ const ReorderableList = <T,>(
     data.length,
   );
 
-  const reorderableCellContextValue = useMemo(
+  const listContextValue = useMemo(
     () => ({
       animationDuration,
       draggedHeight,
@@ -118,7 +118,7 @@ const ReorderableList = <T,>(
     },
     [itemHandlers],
   );
-  const setHandlersContextValue = useMemo(
+  const handlersContextValue = useMemo(
     () => ({setHandlers, removeHandlers}),
     [setHandlers, removeHandlers],
   );
@@ -402,8 +402,8 @@ const ReorderableList = <T,>(
   };
 
   return (
-    <ReorderableCellContext.Provider value={reorderableCellContextValue}>
-      <SetHandlersContext.Provider value={setHandlersContextValue}>
+    <ReorderableListContext.Provider value={listContextValue}>
+      <HandlersContext.Provider value={handlersContextValue}>
         <PanGestureHandler
           maxPointers={1}
           onGestureEvent={handleGestureEvent}
@@ -428,8 +428,8 @@ const ReorderableList = <T,>(
             </NativeViewGestureHandler>
           </Animated.View>
         </PanGestureHandler>
-      </SetHandlersContext.Provider>
-    </ReorderableCellContext.Provider>
+      </HandlersContext.Provider>
+    </ReorderableListContext.Provider>
   );
 };
 

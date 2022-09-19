@@ -6,7 +6,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import ReorderableCellContext from '@library/context/ReorderableCellContext';
+import ReorderableListContext from '@library/context/ReorderableListContext';
 import useLibraryContext from '@library/hooks/useLibraryContext';
 
 interface UseAnimatedCellStyleArgs {
@@ -21,7 +21,7 @@ const useAnimatedCellStyle = ({
   itemDragged,
 }: UseAnimatedCellStyleArgs) => {
   const {animationDuration, currentIndex, draggedIndex, draggedHeight} =
-    useLibraryContext(ReorderableCellContext);
+    useLibraryContext(ReorderableListContext);
 
   const itemZIndex = useSharedValue(0);
   const itemPositionY = useSharedValue(0);
