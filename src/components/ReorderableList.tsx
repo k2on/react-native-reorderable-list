@@ -181,10 +181,11 @@ const ReorderableList = <T,>(
 
     const draggedIndexCopy = draggedIndex.value;
 
-    itemsY[draggedIndex.value].value = 0;
-    dragged[draggedIndex.value].value = false;
+    // reset indexes before arrays to avoid triggering animated reactions
     draggedIndex.value = -1;
     currentIndex.value = -1;
+    itemsY[draggedIndexCopy].value = 0;
+    dragged[draggedIndexCopy].value = false;
     state.value = ReorderableListState.IDLE;
     dragScrollTranslationY.value = 0;
 

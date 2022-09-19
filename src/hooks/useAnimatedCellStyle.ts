@@ -23,9 +23,23 @@ const useAnimatedCellStyle = ({
   const {animationDuration, currentIndex, draggedIndex, draggedHeight} =
     useLibraryContext(ReorderableCellContext);
 
-  const zIndex = useSharedValue(0);
-  const positionY = useSharedValue(0);
+  const itemZIndex = useSharedValue(0);
+  const itemPositionY = useSharedValue(0);
+  const itemDragY = useSharedValue(0);
   const itemIndex = useSharedValue(index);
+
+  useAnimatedReaction(
+    () => dragY.value,
+    () => {
+      if (
+        itemIndex.value === draggedIndex.value &&
+        currentIndex.value >= 0 &&
+        draggedIndex.value >= 0
+      ) {
+        itemDragY.value = dragY.value;
+      }
+    },
+  );
 
   useAnimatedReaction(
     () => currentIndex.value,
@@ -44,14 +58,12 @@ const useAnimatedCellStyle = ({
           newValue = moveDown ? -draggedHeight.value : draggedHeight.value;
         }
 
-        if (newValue !== positionY.value) {
-          positionY.value = withTiming(newValue, {
+        if (newValue !== itemPositionY.value) {
+          itemPositionY.value = withTiming(newValue, {
             duration: animationDuration,
             easing: Easing.out(Easing.ease),
           });
         }
-      } else if (positionY.value !== 0) {
-        positionY.value = 0;
       }
     },
   );
@@ -59,14 +71,17 @@ const useAnimatedCellStyle = ({
   useAnimatedReaction(
     () => itemDragged.value,
     () => {
-      zIndex.value = itemDragged.value ? 999 : 0;
+      itemZIndex.value = itemDragged.value ? 999 : 0;
     },
   );
 
   return useAnimatedStyle(
     () => ({
-      zIndex: zIndex.value,
-      transform: [{translateY: dragY.value}, {translateY: positionY.value}],
+      zIndex: itemZIndex.value,
+      transform: [
+        {translateY: itemDragY.value},
+        {translateY: itemPositionY.value},
+      ],
     }),
   );
 };
