@@ -28,7 +28,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import ReorderableListCell from '@library/components/ReorderableListCell';
-import useAnimatedSharedValues from '@library/hooks/useAnimatedSharedValues';
+import useSharedValuesArray from '@library/hooks/useSharedValuesArray';
 import ReorderableListContext from '@library/context/ReorderableListContext';
 import {ItemOffset, ReorderableListState} from '@library/types/misc';
 import {CellProps, ReorderableListProps} from '@library/types/props';
@@ -75,7 +75,7 @@ const ReorderableList = <T,>(
   const dragScrollTranslationY = useSharedValue(0);
   const dragInitialScrollOffsetY = useSharedValue(0);
   const draggedHeight = useSharedValue(0);
-  const itemOffsets = useAnimatedSharedValues<ItemOffset>(
+  const itemOffsets = useSharedValuesArray<ItemOffset>(
     () => ({length: 0, offset: 0}),
     data.length,
   );
@@ -85,12 +85,12 @@ const ReorderableList = <T,>(
   const animatedScrollOffset = useSharedValue(0);
   const lastAutoscrollTrigger = useSharedValue(-1);
   const flatListHeight = useSharedValue(0);
-  const itemsY = useAnimatedSharedValues(() => 0, data.length);
+  const itemsY = useSharedValuesArray(() => 0, data.length);
   const currentIndex = useSharedValue(-1);
   const draggedIndex = useSharedValue(-1);
-  const dragged = useAnimatedSharedValues(() => false, data.length);
+  const dragged = useSharedValuesArray(() => false, data.length);
   const state = useSharedValue<ReorderableListState>(ReorderableListState.IDLE);
-  const itemHandlers = useAnimatedSharedValues<(Handlers | undefined)[]>(
+  const itemHandlers = useSharedValuesArray<(Handlers | undefined)[]>(
     () => [],
     data.length,
   );
