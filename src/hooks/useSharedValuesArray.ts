@@ -13,21 +13,18 @@ function useSharedValuesArray<T>(
     for (let i = 0; i < size; i++) {
       ref.current[i] = makeMutable(initFunc(i));
     }
-  }
-
-  useEffect(() => {
-    if (size > ref.current.length) {
-      for (let i = ref.current.length; i < size; i++) {
-        ref.current[i] = makeMutable(initFuncRef.current(i));
-      }
-    } else if (size < ref.current.length) {
-      for (let i = size; i < ref.current.length; i++) {
-        cancelAnimation(ref.current[i]);
-      }
-
-      ref.current.splice(size, ref.current.length - size);
+  } else if (size > ref.current.length) {
+    for (let i = ref.current.length; i < size; i++) {
+      ref.current[i] = makeMutable(initFuncRef.current(i));
     }
-  }, [size]);
+  } else if (size < ref.current.length) {
+    for (let i = size; i < ref.current.length; i++) {
+      cancelAnimation(ref.current[i]);
+    }
+
+    // TODO: splice throws an exception
+    ref.current = ref.current.slice(0, size);
+  }
 
   useEffect(() => {
     return () => {
