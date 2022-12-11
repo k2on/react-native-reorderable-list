@@ -83,7 +83,6 @@ const ReorderableList = <T,>(
   const topAutoscrollArea = useSharedValue(0);
   const bottomAutoscrollArea = useSharedValue(0);
   const autoscrollTrigger = useSharedValue(-1);
-  const animatedScrollOffset = useSharedValue(0);
   const lastAutoscrollTrigger = useSharedValue(-1);
   const flatListHeight = useSharedValue(0);
   const itemsY = useSharedValuesArray(() => 0, data.length);
@@ -287,11 +286,8 @@ const ReorderableList = <T,>(
             : AUTOSCROLL_INCREMENT) * autoscrollSpeed;
 
         if (autoscrollIncrement !== 0) {
-          const newScrollOffset =
-            animatedScrollOffset.value + autoscrollIncrement;
-          animatedScrollOffset.value = newScrollOffset;
           // TODO: Fix type
-          scrollTo(flatList as any, 0, newScrollOffset, true);
+          scrollTo(flatList, 0, currentScrollOffsetY.value + autoscrollIncrement, true);
 
           lastAutoscrollTrigger.value = autoscrollTrigger.value;
           autoscrollTrigger.value = withDelay(
