@@ -69,6 +69,7 @@ const ReorderableList = <T,>(
   const nativeHandler = useRef<NativeViewGestureHandler>(null);
   const gestureState = useSharedValue<State>(State.UNDETERMINED);
   const currentY = useSharedValue(0);
+  const currentTranslationY = useSharedValue(0);
   const containerPositionX = useSharedValue(0);
   const containerPositionY = useSharedValue(0);
   const currentScrollOffsetY = useSharedValue(0);
@@ -137,6 +138,7 @@ const ReorderableList = <T,>(
 
         ctx.startY = relativeY;
         currentY.value = relativeY;
+        currentTranslationY.value = e.translationY;
         if (draggedIndex.value >= 0) {
           itemsY[draggedIndex.value].value = e.translationY;
         }
@@ -146,6 +148,7 @@ const ReorderableList = <T,>(
     onActive: (e, ctx) => {
       if (state.value !== ReorderableListState.RELEASING) {
         currentY.value = ctx.startY + e.translationY;
+        currentTranslationY.value = e.translationY;
         if (draggedIndex.value >= 0) {
           itemsY[draggedIndex.value].value =
             e.translationY + dragScrollTranslationY.value;
@@ -313,6 +316,8 @@ const ReorderableList = <T,>(
     if (state.value === ReorderableListState.AUTO_SCROLL) {
       dragScrollTranslationY.value =
         currentScrollOffsetY.value - dragInitialScrollOffsetY.value;
+      itemsY[draggedIndex.value].value =
+        currentTranslationY.value + dragScrollTranslationY.value;
     }
 
     if (onScroll) {
