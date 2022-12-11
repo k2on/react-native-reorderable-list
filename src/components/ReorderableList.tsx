@@ -350,7 +350,7 @@ const ReorderableList = <T,>(
         // forces remount of components with key change
         key={keyExtractor ? keyExtractor(item, index) : index}
         item={item}
-        extraData={parentProps.extraData}
+        extraData={parentProps?.extraData}
         index={index}
         itemOffset={itemOffsets[index]}
         dragY={itemsY[index]}
