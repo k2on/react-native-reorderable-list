@@ -1,6 +1,5 @@
-import React, {useRef, useCallback, useMemo, useEffect} from 'react';
+import React, {useRef, useCallback, useMemo} from 'react';
 import {
-  View,
   FlatList,
   FlatListProps,
   LayoutChangeEvent,
