@@ -136,9 +136,12 @@ const ReorderableList = <T,>(
     onFail: (e) => (gestureState.value = e.state),
   });
 
-  const setScrollEnabled = useCallback((scrollEnabled: boolean) => {
-    flatList.current?.setNativeProps({scrollEnabled});
-  }, []);
+  const setScrollEnabled = useCallback(
+    (scrollEnabled: boolean) => {
+      flatList.current?.setNativeProps({scrollEnabled});
+    },
+    [flatList],
+  );
 
   const resetSharedValues = () => {
     'worklet';
@@ -345,7 +348,7 @@ const ReorderableList = <T,>(
         onLayout={onCellLayout}
       />
     ),
-    [draggedIndex, itemOffsets, startDrag],
+    [itemOffsets, startDrag, dragged, itemsY, released],
   );
 
   const handleContainerLayout = () => {

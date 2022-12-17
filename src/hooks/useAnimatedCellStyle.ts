@@ -75,15 +75,13 @@ const useAnimatedCellStyle = ({
     },
   );
 
-  return useAnimatedStyle(
-    () => ({
-      zIndex: itemZIndex.value,
-      transform: [
-        {translateY: itemDragY.value},
-        {translateY: itemPositionY.value},
-      ],
-    }),
-  );
+  return useAnimatedStyle(() => ({
+    zIndex: itemZIndex.value,
+    transform: [
+      {translateY: itemDragY.value},
+      {translateY: itemPositionY.value},
+    ],
+  }));
 };
 
 export default useAnimatedCellStyle;

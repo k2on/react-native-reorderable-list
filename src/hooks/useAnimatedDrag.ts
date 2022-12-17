@@ -50,7 +50,7 @@ const useAnimatedDrag = (
         onEnd();
       }
     }
-  }, [currentIndex, index]);
+  }, [currentIndex, index, onEnd]);
 };
 
 export default useAnimatedDrag;
