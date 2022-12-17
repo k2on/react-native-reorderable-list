@@ -5,12 +5,14 @@ import useAnimatedDrag from '@library/hooks/useAnimatedDrag';
 import {
   ReorderableListProps,
   ReorderableListReorderEvent,
+  ReorderableAnimatedScaleProps,
 } from '@library/types/props';
 
 export {
   useDragHandler,
   useAnimatedDrag,
   ReorderableListProps,
+  ReorderableAnimatedScaleProps,
   ReorderableListReorderEvent,
   ReorderableAnimation,
 };

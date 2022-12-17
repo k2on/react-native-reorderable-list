@@ -3,8 +3,10 @@ import {
   LayoutChangeEvent,
   NativeScrollEvent,
   StyleProp,
+  ViewProps,
   ViewStyle,
 } from 'react-native';
+import {EasingFn, EasingFunctionFactory} from 'react-native-reanimated';
 
 export interface CellProps<T> {
   index: number;
@@ -48,7 +50,7 @@ export interface ReorderableListProps<T>
    */
   autoscrollSpeed?: number;
   /**
-   * Duration of animations in milliseconds. Default: `200`.
+   * Duration of the animations in milliseconds. Default: `200`.
    */
   animationDuration?: number;
   /**
@@ -59,4 +61,27 @@ export interface ReorderableListProps<T>
    * Event fired at most once per frame during scrolling. Needs to be a ```worklet```. See [Reanimated docs](https://docs.swmansion.com/react-native-reanimated/docs/2.2.0/worklets/) for further info.
    */
   onScroll?: (event: NativeScrollEvent) => void;
+}
+
+export interface ReorderableAnimatedScaleProps extends ViewProps {
+  /**
+   * Scale of the view on drag end.
+   */
+  dragEndScale?: number;
+  /**
+   * Scale of the view on drag start.
+   */
+  dragStartScale?: number;
+  /**
+   * Easing function for the animation to the end scale. Default: `Easing.in(Easing.ease)`.
+   */
+  easingDragEnd: EasingFn | EasingFunctionFactory;
+  /**
+   * Easing function for the animation to the start scale. Default: `Easing.out(Easing.ease)`.
+   */
+  easingDragStart?: EasingFn | EasingFunctionFactory;
+  /**
+   * Duration of the animations in milliseconds. Default: `200`.
+   */
+  animationDuration?: number;
 }
