@@ -42,7 +42,8 @@ export interface ReorderableListProps<T>
    */
   containerStyle?: StyleProp<ViewStyle>;
   /**
-   * Area at the extremeties of the list which triggers scrolling when an item is dragged. Accepts a value between `0` and `0.5`. Default: `0.1`.
+   * Area at the extremeties of the list which triggers scrolling when an item is dragged.
+   * Accepts a value between `0` and `0.5`. Default: `0.1`.
    */
   autoscrollArea?: number;
   /**
@@ -50,9 +51,9 @@ export interface ReorderableListProps<T>
    */
   autoscrollSpeed?: number;
   /**
-   * Duration of the animations in milliseconds. Accepts a value between `0` and `400`.
-   * The reason why there's a cap is that users won't be able to drag a new item
-   * until the dragged item is released and its animation to its new positions ends.
+   * Duration of the animations in milliseconds.
+   * Be aware that users won't be able to drag a new item until the dragged item is released and
+   * its animation to its new position ends.
    * Default: `200`.
    */
   animationDuration?: number;

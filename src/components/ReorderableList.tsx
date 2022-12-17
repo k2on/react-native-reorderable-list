@@ -88,10 +88,9 @@ const ReorderableList = <T,>(
   const state = useSharedValue<ReorderableListState>(ReorderableListState.IDLE);
 
   // animation duration as a shared value allows to avoid re-rendering of all cells on value change
-  const cappedAnimationDuration = Math.min(animationDuration, 400);
-  const duration = useSharedValue(cappedAnimationDuration);
-  if (duration.value !== cappedAnimationDuration) {
-    duration.value = cappedAnimationDuration;
+  const duration = useSharedValue(animationDuration);
+  if (duration.value !== animationDuration) {
+    duration.value = animationDuration;
   }
 
   const listContextValue = useMemo(
