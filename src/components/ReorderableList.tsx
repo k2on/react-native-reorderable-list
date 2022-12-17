@@ -87,10 +87,10 @@ const ReorderableList = <T,>(
   const dragged = useSharedValuesArray(() => false, data.length);
   const released = useSharedValuesArray(() => false, data.length);
   const state = useSharedValue<ReorderableListState>(ReorderableListState.IDLE);
-  const cappedAnimationDuration = Math.min(animationDuration, 300);
-  // animation duration as a shared value allows to avoid re-rendering of all cells on value change
-  const duration = useSharedValue(cappedAnimationDuration);
 
+  // animation duration as a shared value allows to avoid re-rendering of all cells on value change
+  const cappedAnimationDuration = Math.min(animationDuration, 400);
+  const duration = useSharedValue(cappedAnimationDuration);
   if (duration.value !== cappedAnimationDuration) {
     duration.value = cappedAnimationDuration;
   }
@@ -110,7 +110,7 @@ const ReorderableList = <T,>(
   >({
     onStart: (e, ctx) => {
       // prevent new dragging until item is completely released
-      if (state.value !== ReorderableListState.RELEASING) {
+      if (state.value === ReorderableListState.IDLE) {
         const relativeY =
           e.absoluteY -
           containerPositionY.value -
@@ -321,14 +321,17 @@ const ReorderableList = <T,>(
 
   const startDrag = useWorkletCallback(
     (index: number) => {
-      draggedHeight.value = itemOffsets[index].value.length;
-      dragged[index].value = true;
-      draggedIndex.value = index;
-      currentIndex.value = index;
-      state.value = ReorderableListState.DRAGGING;
-      dragInitialScrollOffsetY.value = currentScrollOffsetY.value;
+      // allow new drag when item is completely released
+      if (state.value === ReorderableListState.IDLE) {
+        draggedHeight.value = itemOffsets[index].value.length;
+        dragged[index].value = true;
+        draggedIndex.value = index;
+        currentIndex.value = index;
+        state.value = ReorderableListState.DRAGGING;
+        dragInitialScrollOffsetY.value = currentScrollOffsetY.value;
 
-      runOnJS(setScrollEnabled)(false);
+        runOnJS(setScrollEnabled)(false);
+      }
     },
     [setScrollEnabled],
   );

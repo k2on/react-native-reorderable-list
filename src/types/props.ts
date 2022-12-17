@@ -50,7 +50,10 @@ export interface ReorderableListProps<T>
    */
   autoscrollSpeed?: number;
   /**
-   * Duration of the animations in milliseconds. Max allowed value: `300`. Default: `200`.
+   * Duration of the animations in milliseconds. Accepts a value between `0` and `400`.
+   * The reason why there's a cap is that users won't be able to drag a new item or scroll the list
+   * until the dragged item is released and its animation to its new positions ends.
+   * Default: `200`.
    */
   animationDuration?: number;
   /**
