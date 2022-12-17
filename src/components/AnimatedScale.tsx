@@ -10,8 +10,6 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import useAnimatedDrag from '@library/hooks/useAnimatedDrag';
-import useLibraryContext from '@library/hooks/useLibraryContext';
-import ReorderableListContext from '@library/contexts/ReorderableListContext';
 
 export interface AnimatedScaleProps extends ViewProps {
   startScale?: number;
@@ -26,14 +24,10 @@ const AnimatedScale: React.FC<AnimatedScaleProps> = ({
   endScale = 1,
   easingStart = Easing.in(Easing.ease),
   easingEnd = Easing.out(Easing.ease),
-  animationDuration,
+  animationDuration = 200,
   ...rest
 }) => {
-  const {animationDuration: defaultAnimationDuration} = useLibraryContext(
-    ReorderableListContext,
-  );
   const scale = useSharedValue(endScale);
-  const duration = animationDuration || defaultAnimationDuration;
 
   useAnimatedDrag(
     {
@@ -42,7 +36,7 @@ const AnimatedScale: React.FC<AnimatedScaleProps> = ({
 
         scale.value = withTiming(startScale, {
           easing: easingStart,
-          duration,
+          duration: animationDuration,
         });
       },
       onRelease: () => {
@@ -50,7 +44,7 @@ const AnimatedScale: React.FC<AnimatedScaleProps> = ({
 
         scale.value = withTiming(endScale, {
           easing: easingEnd,
-          duration,
+          duration: animationDuration,
         });
       },
     },

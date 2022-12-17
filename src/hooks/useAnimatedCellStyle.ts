@@ -13,15 +13,18 @@ interface UseAnimatedCellStyleArgs {
   index: number;
   dragY: Animated.SharedValue<number>;
   itemDragged: Animated.SharedValue<boolean>;
+  animationDuration: number;
 }
 
 const useAnimatedCellStyle = ({
   index,
   dragY,
   itemDragged,
+  animationDuration,
 }: UseAnimatedCellStyleArgs) => {
-  const {animationDuration, currentIndex, draggedIndex, draggedHeight} =
-    useLibraryContext(ReorderableListContext);
+  const {currentIndex, draggedIndex, draggedHeight} = useLibraryContext(
+    ReorderableListContext,
+  );
 
   const itemZIndex = useSharedValue(0);
   const itemPositionY = useSharedValue(0);

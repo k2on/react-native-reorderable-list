@@ -48,7 +48,7 @@ export interface ReorderableListProps<T>
    */
   autoscrollSpeed?: number;
   /**
-   * Duration of animations in milliseconds. Default: `100`.
+   * Duration of animations in milliseconds. Default: `200`.
    */
   animationDuration?: number;
   /**

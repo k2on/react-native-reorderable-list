@@ -15,6 +15,7 @@ interface ReorderableListCellProps {
   itemReleased: Animated.SharedValue<boolean>;
   children: React.ReactNode;
   onLayout?: (e: LayoutChangeEvent) => void;
+  animationDuration: number;
   // TODO: set type
   item: any;
   extraData: any;
@@ -29,6 +30,7 @@ const ReorderableListCell: React.FC<ReorderableListCellProps> = ({
   dragY,
   itemDragged,
   itemReleased,
+  animationDuration,
 }) => {
   const dragHandler = useWorkletCallback(() => startDrag(index), [index]);
   const contextValue = useMemo(
@@ -45,6 +47,7 @@ const ReorderableListCell: React.FC<ReorderableListCellProps> = ({
     index,
     dragY,
     itemDragged,
+    animationDuration,
   });
 
   const handleLayout = (e: LayoutChangeEvent) => {

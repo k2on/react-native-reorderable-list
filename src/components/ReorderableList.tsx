@@ -25,6 +25,7 @@ import Animated, {
   Easing,
   useWorkletCallback,
   withDelay,
+  runOnUI,
 } from 'react-native-reanimated';
 
 import ReorderableListCell from '@library/components/ReorderableListCell';
@@ -34,7 +35,6 @@ import {ItemOffset, ReorderableListState} from '@library/types/misc';
 import {CellProps, ReorderableListProps} from '@library/types/props';
 import {setForwardedRef} from '@library/utils/setForwardedRef';
 import {AUTOSCROLL_INCREMENT, AUTOSCROLL_DELAY} from '@library/consts';
-import {runOnUI} from 'react-native-reanimated';
 
 const version = React.version.split('.');
 const hasAutomaticBatching =
@@ -52,7 +52,7 @@ const ReorderableList = <T,>(
     containerStyle,
     autoscrollArea = 0.1,
     autoscrollSpeed = 1,
-    animationDuration = 100,
+    animationDuration = 200,
     onLayout,
     onReorder,
     onScroll,
@@ -90,12 +90,11 @@ const ReorderableList = <T,>(
 
   const listContextValue = useMemo(
     () => ({
-      animationDuration,
       draggedHeight,
       currentIndex,
       draggedIndex,
     }),
-    [animationDuration, draggedHeight, currentIndex, draggedIndex],
+    [draggedHeight, currentIndex, draggedIndex],
   );
 
   const handleGestureEvent = useAnimatedGestureHandler<
@@ -343,12 +342,21 @@ const ReorderableList = <T,>(
         dragY={itemsY[index]}
         itemDragged={dragged[index]}
         itemReleased={released[index]}
+        animationDuration={animationDuration}
         startDrag={startDrag}
         children={children}
         onLayout={onCellLayout}
       />
     ),
-    [itemOffsets, startDrag, dragged, itemsY, released],
+    [
+      itemOffsets,
+      startDrag,
+      dragged,
+      itemsY,
+      released,
+      // TODO: use shared value to avoid rerender of cells when it changes
+      animationDuration,
+    ],
   );
 
   const handleContainerLayout = () => {
