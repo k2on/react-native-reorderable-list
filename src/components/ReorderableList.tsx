@@ -168,7 +168,6 @@ const ReorderableList = <T,>(
     if (fromIndex !== toIndex) {
       const updateState = () => {
         onReorder({fromIndex, toIndex});
-        setScrollEnabled(true);
       };
 
       if (!hasAutomaticBatching) {
@@ -176,8 +175,6 @@ const ReorderableList = <T,>(
       } else {
         updateState();
       }
-    } else {
-      setScrollEnabled(true);
     }
 
     runOnUI(resetSharedValues)();
@@ -211,6 +208,9 @@ const ReorderableList = <T,>(
         state.value = ReorderableListState.RELEASING;
         released[draggedIndex.value].value = true;
 
+        // enable back scroll on releasing
+        runOnJS(setScrollEnabled)(true);
+
         // if items have different heights and the dragged item is moved forward
         // then its new offset position needs to be adjusted
         const offsetCorrection =
@@ -235,9 +235,8 @@ const ReorderableList = <T,>(
         } else {
           // user might drag and release the item without moving it so,
           // since the animation end callback is not executed in that case
-          // we need to reset values and enable scroll as the reorder function would do
+          // we need to reset values as the reorder function would do
           resetSharedValues();
-          runOnJS(setScrollEnabled)(true);
         }
       }
     },
