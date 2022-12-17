@@ -50,7 +50,7 @@ export interface ReorderableListProps<T>
    */
   autoscrollSpeed?: number;
   /**
-   * Duration of the animations in milliseconds. Default: `200`.
+   * Duration of the animations in milliseconds. Max allowed value: `300`. Default: `200`.
    */
   animationDuration?: number;
   /**
@@ -75,7 +75,7 @@ export interface ReorderableAnimatedScaleProps extends ViewProps {
   /**
    * Easing function for the animation to the end scale. Default: `Easing.in(Easing.ease)`.
    */
-  easingDragEnd: EasingFn | EasingFunctionFactory;
+  easingDragEnd?: EasingFn | EasingFunctionFactory;
   /**
    * Easing function for the animation to the start scale. Default: `Easing.out(Easing.ease)`.
    */
