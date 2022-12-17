@@ -67,25 +67,40 @@ export interface ReorderableListProps<T>
   onScroll?: (event: NativeScrollEvent) => void;
 }
 
-export interface ReorderableAnimatedScaleProps extends ViewProps {
+export interface ReorderableAnimationOptions {
   /**
-   * Scale of the view on drag end.
+   * Value of the animated style on drag end.
    */
-  dragEndScale?: number;
+  enabled: boolean;
   /**
-   * Scale of the view on drag start.
+   * Value of the animated style on drag end.
    */
-  dragStartScale?: number;
+  valueDragEnd: number;
   /**
-   * Easing function for the animation to the end scale. Default: `Easing.in(Easing.ease)`.
+   * Value of the animate style on drag start.
+   */
+  valueDragStart: number;
+  /**
+   * Easing function for the animation to the end value. Default: `Easing.in(Easing.ease)`.
    */
   easingDragEnd?: EasingFn | EasingFunctionFactory;
   /**
-   * Easing function for the animation to the start scale. Default: `Easing.out(Easing.ease)`.
+   * Easing function for the animation to the start value. Default: `Easing.out(Easing.ease)`.
    */
   easingDragStart?: EasingFn | EasingFunctionFactory;
   /**
    * Duration of the animations in milliseconds. Default: `200`.
    */
-  animationDuration?: number;
+  duration?: number;
+}
+
+export interface ReorderableAnimationProps extends ViewProps {
+  /**
+   * Options for `opacity` animation. Enabled by default with custom default options.
+   */
+  opacityOptions?: ReorderableAnimationOptions;
+  /**
+   * Options for `scale` animation. Enabled by default with custom default options.
+   */
+  scaleOptions?: ReorderableAnimationOptions;
 }

@@ -13,7 +13,7 @@ interface UseAnimatedDragHandlers {
 
 const useAnimatedDrag = (
   {onStart, onRelease, onEnd}: UseAnimatedDragHandlers,
-  deps: DependencyList,
+  deps?: DependencyList,
 ) => {
   const {currentIndex} = useLibraryContext(ReorderableListContext);
   const {dragged, released, index} = useLibraryContext(ReorderableCellContext);
