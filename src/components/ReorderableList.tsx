@@ -233,7 +233,11 @@ const ReorderableList = <T,>(
             },
           );
         } else {
+          // user might drag and release the item without moving it so,
+          // since the animation end callback is not executed in that case
+          // we need to reset values and enable scroll as the reorder function would do
           resetSharedValues();
+          runOnJS(setScrollEnabled)(true);
         }
       }
     },
