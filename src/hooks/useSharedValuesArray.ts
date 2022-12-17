@@ -22,7 +22,7 @@ function useSharedValuesArray<T>(
       cancelAnimation(ref.current[i]);
     }
 
-    // TODO: splice throws an exception
+    // slice is not the most efficent, but splice throws an exception
     ref.current = ref.current.slice(0, size);
   }
 

@@ -13,7 +13,7 @@ interface UseAnimatedCellStyleArgs {
   index: number;
   dragY: Animated.SharedValue<number>;
   itemDragged: Animated.SharedValue<boolean>;
-  animationDuration: number;
+  animationDuration: Animated.SharedValue<number>;
 }
 
 const useAnimatedCellStyle = ({
@@ -63,7 +63,7 @@ const useAnimatedCellStyle = ({
 
         if (newValue !== itemPositionY.value) {
           itemPositionY.value = withTiming(newValue, {
-            duration: animationDuration,
+            duration: animationDuration.value,
             easing: Easing.out(Easing.ease),
           });
         }

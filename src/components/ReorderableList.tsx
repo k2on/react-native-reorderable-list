@@ -1,4 +1,4 @@
-import React, {useRef, useCallback, useMemo} from 'react';
+import React, {useRef, useCallback, useMemo, useEffect} from 'react';
 import {
   View,
   FlatList,
@@ -87,6 +87,12 @@ const ReorderableList = <T,>(
   const dragged = useSharedValuesArray(() => false, data.length);
   const released = useSharedValuesArray(() => false, data.length);
   const state = useSharedValue<ReorderableListState>(ReorderableListState.IDLE);
+  // animation duration as a shared value allows to avoid re-rendering of all cells on value change
+  const duration = useSharedValue(animationDuration);
+
+  if (duration.value !== animationDuration) {
+    duration.value = animationDuration;
+  }
 
   const listContextValue = useMemo(
     () => ({
@@ -218,7 +224,7 @@ const ReorderableList = <T,>(
           itemsY[draggedIndex.value].value = withTiming(
             newTopPosition,
             {
-              duration: animationDuration,
+              duration: duration.value,
               easing: Easing.out(Easing.ease),
             },
             () => {
@@ -269,7 +275,6 @@ const ReorderableList = <T,>(
             : AUTOSCROLL_INCREMENT) * autoscrollSpeed;
 
         if (autoscrollIncrement !== 0) {
-          // TODO: Fix type
           scrollTo(
             flatList,
             0,
@@ -342,31 +347,20 @@ const ReorderableList = <T,>(
         dragY={itemsY[index]}
         itemDragged={dragged[index]}
         itemReleased={released[index]}
-        animationDuration={animationDuration}
+        animationDuration={duration}
         startDrag={startDrag}
         children={children}
         onLayout={onCellLayout}
       />
     ),
-    [
-      itemOffsets,
-      startDrag,
-      dragged,
-      itemsY,
-      released,
-      // TODO: use shared value to avoid rerender of cells when it changes
-      animationDuration,
-    ],
+    [itemOffsets, startDrag, dragged, itemsY, released, duration],
   );
 
   const handleContainerLayout = () => {
-    // TODO: fix type
-    (container.current as unknown as View)?.measureInWindow(
-      (x: number, y: number) => {
-        containerPositionX.value = x;
-        containerPositionY.value = y;
-      },
-    );
+    container.current?.measureInWindow((x: number, y: number) => {
+      containerPositionX.value = x;
+      containerPositionY.value = y;
+    });
   };
 
   const handleFlatListLayout = useCallback(

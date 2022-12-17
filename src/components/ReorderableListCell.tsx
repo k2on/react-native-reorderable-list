@@ -6,7 +6,7 @@ import ReorderableCellContext from '@library/contexts/ReorderableCellContext';
 import useAnimatedCellStyle from '@library/hooks/useAnimatedCellStyle';
 import {ItemOffset} from '@library/types/misc';
 
-interface ReorderableListCellProps {
+interface ReorderableListCellProps<T, U> {
   index: number;
   startDrag: (index: number) => void;
   itemOffset: Animated.SharedValue<ItemOffset | undefined>;
@@ -15,13 +15,13 @@ interface ReorderableListCellProps {
   itemReleased: Animated.SharedValue<boolean>;
   children: React.ReactNode;
   onLayout?: (e: LayoutChangeEvent) => void;
-  animationDuration: number;
-  // TODO: set type
-  item: any;
-  extraData: any;
+  // animation duration as a shared value allows to avoid re-renders on value change
+  animationDuration: Animated.SharedValue<number>;
+  item: T;
+  extraData: U;
 }
 
-const ReorderableListCell: React.FC<ReorderableListCellProps> = ({
+const ReorderableListCell = <T, U>({
   index,
   startDrag,
   children,
@@ -31,7 +31,7 @@ const ReorderableListCell: React.FC<ReorderableListCellProps> = ({
   itemDragged,
   itemReleased,
   animationDuration,
-}) => {
+}: ReorderableListCellProps<T, U>) => {
   const dragHandler = useWorkletCallback(() => startDrag(index), [index]);
   const contextValue = useMemo(
     () => ({
