@@ -1,8 +1,11 @@
 import React from 'react';
+import Animated from 'react-native-reanimated';
 
 interface ReorderableCellContextData {
   index: number;
   dragHandler: () => void;
+  dragged: Animated.SharedValue<boolean>;
+  released: Animated.SharedValue<boolean>;
 }
 
 const ReorderableCellContext = React.createContext<

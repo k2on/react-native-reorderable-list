@@ -34,11 +34,7 @@ import {ItemOffset, ReorderableListState} from '@library/types/misc';
 import {CellProps, ReorderableListProps} from '@library/types/props';
 import {setForwardedRef} from '@library/utils/setForwardedRef';
 import {AUTOSCROLL_INCREMENT, AUTOSCROLL_DELAY} from '@library/consts';
-import HandlersContext, {
-  Handlers,
-  RemoveHandlersFunc,
-  SetHandlersFunc,
-} from '@library/contexts/HandlersContext';
+import {runOnUI} from 'react-native-reanimated';
 
 const version = React.version.split('.');
 const hasAutomaticBatching =
@@ -89,11 +85,8 @@ const ReorderableList = <T,>(
   const currentIndex = useSharedValue(-1);
   const draggedIndex = useSharedValue(-1);
   const dragged = useSharedValuesArray(() => false, data.length);
+  const released = useSharedValuesArray(() => false, data.length);
   const state = useSharedValue<ReorderableListState>(ReorderableListState.IDLE);
-  const itemHandlers = useSharedValuesArray<(Handlers | undefined)[]>(
-    () => [],
-    data.length,
-  );
 
   const listContextValue = useMemo(
     () => ({
@@ -103,24 +96,6 @@ const ReorderableList = <T,>(
       draggedIndex,
     }),
     [animationDuration, draggedHeight, currentIndex, draggedIndex],
-  );
-
-  const setHandlers: SetHandlersFunc = useCallback(
-    (index, handlers) => {
-      itemHandlers[index].value = [...itemHandlers[index].value, handlers];
-      return itemHandlers[index].value.length;
-    },
-    [itemHandlers],
-  );
-  const removeHandlers: RemoveHandlersFunc = useCallback(
-    (index, handlersRef) => {
-      itemHandlers[index].value[handlersRef] = undefined;
-    },
-    [itemHandlers],
-  );
-  const handlersContextValue = useMemo(
-    () => ({setHandlers, removeHandlers}),
-    [setHandlers, removeHandlers],
   );
 
   const handleGestureEvent = useAnimatedGestureHandler<
@@ -165,6 +140,21 @@ const ReorderableList = <T,>(
     flatList.current?.setNativeProps({scrollEnabled});
   }, []);
 
+  const resetSharedValues = () => {
+    'worklet';
+
+    const draggedIndexCopy = draggedIndex.value;
+
+    // reset indexes before arrays to avoid triggering animated reactions
+    draggedIndex.value = -1;
+    // current index is reset on item render for the on end event
+    itemsY[draggedIndexCopy].value = 0;
+    dragged[draggedIndexCopy].value = false;
+    // released flag is reset after release is triggered in the item
+    state.value = ReorderableListState.IDLE;
+    dragScrollTranslationY.value = 0;
+  };
+
   const reorder = (fromIndex: number, toIndex: number) => {
     if (fromIndex !== toIndex) {
       const updateState = () => {
@@ -181,18 +171,7 @@ const ReorderableList = <T,>(
       setScrollEnabled(true);
     }
 
-    const draggedIndexCopy = draggedIndex.value;
-
-    // reset indexes before arrays to avoid triggering animated reactions
-    draggedIndex.value = -1;
-    currentIndex.value = -1;
-    itemsY[draggedIndexCopy].value = 0;
-    dragged[draggedIndexCopy].value = false;
-    state.value = ReorderableListState.IDLE;
-    dragScrollTranslationY.value = 0;
-
-    // call on end handlers
-    itemHandlers[draggedIndexCopy].value.forEach((x) => x?.end());
+    runOnUI(resetSharedValues)();
   };
 
   const getIndexFromY = useWorkletCallback((y: number, scrollY?: number) => {
@@ -221,9 +200,7 @@ const ReorderableList = <T,>(
         const draggedOffset = itemOffsets[draggedIndex.value].value;
 
         state.value = ReorderableListState.RELEASING;
-
-        // call on release handlers
-        itemHandlers[draggedIndex.value].value.forEach((x) => x?.release());
+        released[draggedIndex.value].value = true;
 
         // if items have different heights and the dragged item is moved forward
         // then its new offset position needs to be adjusted
@@ -234,17 +211,21 @@ const ReorderableList = <T,>(
         const newTopPosition =
           currentOffset.offset - draggedOffset.offset + offsetCorrection;
 
-        // animate dragged item to its new position on release
-        itemsY[draggedIndex.value].value = withTiming(
-          newTopPosition,
-          {
-            duration: animationDuration,
-            easing: Easing.out(Easing.ease),
-          },
-          () => {
-            runOnJS(reorder)(draggedIndex.value, currentIndex.value);
-          },
-        );
+        if (newTopPosition !== itemsY[draggedIndex.value].value) {
+          // animate dragged item to its new position on release
+          itemsY[draggedIndex.value].value = withTiming(
+            newTopPosition,
+            {
+              duration: animationDuration,
+              easing: Easing.out(Easing.ease),
+            },
+            () => {
+              runOnJS(reorder)(draggedIndex.value, currentIndex.value);
+            },
+          );
+        } else {
+          resetSharedValues();
+        }
       }
     },
   );
@@ -287,7 +268,12 @@ const ReorderableList = <T,>(
 
         if (autoscrollIncrement !== 0) {
           // TODO: Fix type
-          scrollTo(flatList, 0, currentScrollOffsetY.value + autoscrollIncrement, true);
+          scrollTo(
+            flatList,
+            0,
+            currentScrollOffsetY.value + autoscrollIncrement,
+            true,
+          );
 
           lastAutoscrollTrigger.value = autoscrollTrigger.value;
           autoscrollTrigger.value = withDelay(
@@ -330,9 +316,6 @@ const ReorderableList = <T,>(
       state.value = ReorderableListState.DRAGGING;
       dragInitialScrollOffsetY.value = currentScrollOffsetY.value;
 
-      // call on start drag handlers
-      itemHandlers[index].value.forEach((x) => x?.start());
-
       runOnJS(setScrollEnabled)(false);
     },
     [setScrollEnabled],
@@ -356,6 +339,7 @@ const ReorderableList = <T,>(
         itemOffset={itemOffsets[index]}
         dragY={itemsY[index]}
         itemDragged={dragged[index]}
+        itemReleased={released[index]}
         startDrag={startDrag}
         children={children}
         onLayout={onCellLayout}
@@ -404,32 +388,30 @@ const ReorderableList = <T,>(
 
   return (
     <ReorderableListContext.Provider value={listContextValue}>
-      <HandlersContext.Provider value={handlersContextValue}>
-        <PanGestureHandler
-          maxPointers={1}
-          onGestureEvent={handleGestureEvent}
-          onHandlerStateChange={handleGestureEvent}
-          simultaneousHandlers={nativeHandler}>
-          <Animated.View
-            ref={container}
-            style={containerStyle}
-            onLayout={handleContainerLayout}>
-            <NativeViewGestureHandler ref={nativeHandler}>
-              <AnimatedFlatList
-                {...rest}
-                ref={handleRef}
-                data={data}
-                CellRendererComponent={renderAnimatedCell}
-                onLayout={handleFlatListLayout}
-                onScroll={handleScroll}
-                scrollEventThrottle={1}
-                horizontal={false}
-                removeClippedSubviews={false}
-              />
-            </NativeViewGestureHandler>
-          </Animated.View>
-        </PanGestureHandler>
-      </HandlersContext.Provider>
+      <PanGestureHandler
+        maxPointers={1}
+        onGestureEvent={handleGestureEvent}
+        onHandlerStateChange={handleGestureEvent}
+        simultaneousHandlers={nativeHandler}>
+        <Animated.View
+          ref={container}
+          style={containerStyle}
+          onLayout={handleContainerLayout}>
+          <NativeViewGestureHandler ref={nativeHandler}>
+            <AnimatedFlatList
+              {...rest}
+              ref={handleRef}
+              data={data}
+              CellRendererComponent={renderAnimatedCell}
+              onLayout={handleFlatListLayout}
+              onScroll={handleScroll}
+              scrollEventThrottle={1}
+              horizontal={false}
+              removeClippedSubviews={false}
+            />
+          </NativeViewGestureHandler>
+        </Animated.View>
+      </PanGestureHandler>
     </ReorderableListContext.Provider>
   );
 };

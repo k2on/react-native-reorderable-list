@@ -1,9 +1,9 @@
-import {useEffect} from 'react';
-import {useWorkletCallback} from 'react-native-reanimated';
+import {DependencyList, useEffect} from 'react';
+import {useAnimatedReaction} from 'react-native-reanimated';
 
-import HandlersContext from '@library/contexts/HandlersContext';
 import useLibraryContext from '@library/hooks/useLibraryContext';
 import ReorderableCellContext from '@library/contexts/ReorderableCellContext';
+import ReorderableListContext from '@library/contexts/ReorderableListContext';
 
 interface UseAnimatedDragHandlers {
   onStart?: () => void;
@@ -11,26 +11,46 @@ interface UseAnimatedDragHandlers {
   onEnd?: () => void;
 }
 
-const emptyWorklet = () => {
-  'worklet';
-};
-
 const useAnimatedDrag = (
   {onStart, onRelease, onEnd}: UseAnimatedDragHandlers,
-  deps: ReadonlyArray<any> = [],
+  deps: DependencyList,
 ) => {
-  const {index} = useLibraryContext(ReorderableCellContext);
-  const {setHandlers, removeHandlers} = useLibraryContext(HandlersContext);
+  const {currentIndex} = useLibraryContext(ReorderableListContext);
+  const {dragged, released, index} = useLibraryContext(ReorderableCellContext);
 
-  // TODO: can it be improved?
-  const start = useWorkletCallback(onStart || emptyWorklet, deps);
-  const release = useWorkletCallback(onRelease || emptyWorklet, deps);
-  const end = useWorkletCallback(onEnd || emptyWorklet, deps);
+  useAnimatedReaction(
+    () => dragged.value,
+    (newValue) => {
+      if (newValue && onStart) {
+        onStart();
+      }
+    },
+    deps,
+  );
+
+  useAnimatedReaction(
+    () => released.value,
+    (newValue) => {
+      if (newValue) {
+        released.value = false;
+
+        if (onRelease) {
+          onRelease();
+        }
+      }
+    },
+    deps,
+  );
 
   useEffect(() => {
-    const handlersRef = setHandlers(index, {start, release, end});
-    return () => removeHandlers(index, handlersRef);
-  }, [setHandlers, removeHandlers, index, start, release, end]);
+    if (currentIndex.value === index) {
+      currentIndex.value = -1;
+
+      if (onEnd) {
+        onEnd();
+      }
+    }
+  }, [currentIndex, index]);
 };
 
 export default useAnimatedDrag;

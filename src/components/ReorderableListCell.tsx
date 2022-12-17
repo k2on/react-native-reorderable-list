@@ -12,6 +12,7 @@ interface ReorderableListCellProps {
   itemOffset: Animated.SharedValue<ItemOffset | undefined>;
   dragY: Animated.SharedValue<number>;
   itemDragged: Animated.SharedValue<boolean>;
+  itemReleased: Animated.SharedValue<boolean>;
   children: React.ReactNode;
   onLayout?: (e: LayoutChangeEvent) => void;
   // TODO: set type
@@ -27,14 +28,17 @@ const ReorderableListCell: React.FC<ReorderableListCellProps> = ({
   itemOffset,
   dragY,
   itemDragged,
+  itemReleased,
 }) => {
   const dragHandler = useWorkletCallback(() => startDrag(index), [index]);
   const contextValue = useMemo(
     () => ({
       index,
       dragHandler,
+      dragged: itemDragged,
+      released: itemReleased,
     }),
-    [index, dragHandler],
+    [index, dragHandler, itemDragged, itemReleased],
   );
 
   const style = useAnimatedCellStyle({
