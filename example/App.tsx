@@ -24,14 +24,14 @@ const newList = Array(20)
   .fill(null)
   .map((_, i) => ({
     id: i.toString(),
-    height: Math.floor(Math.random() * 100),
+    height: Math.max(50, Math.floor(Math.random() * 100)),
   }));
 
 const list: CardInfo[] = Array(100)
   .fill(null)
   .map((_, i) => ({
     id: i.toString(),
-    height: Math.floor(Math.random() * 100),
+    height: Math.max(50, Math.floor(Math.random() * 100)),
   }));
 
 const Card: React.FC<CardInfo> = ({id, height}) => {
