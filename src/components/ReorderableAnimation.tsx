@@ -61,14 +61,14 @@ const ReorderableAnimation: React.FC<ReorderableAnimationProps> = ({
       'worklet';
 
       if (scaleOptions.enabled) {
-        scale.value = withTiming(scaleOptions.valueDragStart, {
+        scale.value = withTiming(scaleOptions.valueDragEnd, {
           easing: scaleOptions.easingDragEnd,
           duration: scaleOptions.duration,
         });
       }
 
       if (opacityOptions.enabled) {
-        opacity.value = withTiming(opacityOptions.valueDragStart, {
+        opacity.value = withTiming(opacityOptions.valueDragEnd, {
           easing: opacityOptions.easingDragEnd,
           duration: opacityOptions.duration,
         });
