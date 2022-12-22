@@ -43,12 +43,8 @@ const useAnimatedDrag = (
   );
 
   useEffect(() => {
-    if (currentIndex.value === index) {
-      currentIndex.value = -1;
-
-      if (onEnd) {
-        onEnd();
-      }
+    if (currentIndex.value === index && onEnd) {
+      onEnd();
     }
   }, [currentIndex, index, onEnd]);
 };

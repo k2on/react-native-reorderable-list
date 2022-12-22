@@ -3,7 +3,6 @@ import {
   FlatList,
   FlatListProps,
   LayoutChangeEvent,
-  StatusBar,
   unstable_batchedUpdates,
 } from 'react-native';
 import {
@@ -65,7 +64,6 @@ const ReorderableList = <T,>(
   const gestureState = useSharedValue<State>(State.UNDETERMINED);
   const currentY = useSharedValue(0);
   const currentTranslationY = useSharedValue(0);
-  const containerPositionX = useSharedValue(0);
   const containerPositionY = useSharedValue(0);
   const currentScrollOffsetY = useSharedValue(0);
   const dragScrollTranslationY = useSharedValue(0);
@@ -109,10 +107,7 @@ const ReorderableList = <T,>(
     onStart: (e, ctx) => {
       // prevent new dragging until item is completely released
       if (state.value === ReorderableListState.IDLE) {
-        const relativeY =
-          e.absoluteY -
-          containerPositionY.value -
-          (StatusBar.currentHeight || 0);
+        const relativeY = e.absoluteY - containerPositionY.value;
 
         ctx.startY = relativeY;
         currentY.value = relativeY;
@@ -147,9 +142,7 @@ const ReorderableList = <T,>(
     [flatList],
   );
 
-  const resetSharedValues = () => {
-    'worklet';
-
+  const resetSharedValues = useWorkletCallback(() => {
     const draggedIndexCopy = draggedIndex.value;
 
     // reset indexes before arrays to avoid triggering animated reactions
@@ -160,7 +153,7 @@ const ReorderableList = <T,>(
     // released flag is reset after release is triggered in the item
     state.value = ReorderableListState.IDLE;
     dragScrollTranslationY.value = 0;
-  };
+  });
 
   const reorder = (fromIndex: number, toIndex: number) => {
     if (fromIndex !== toIndex) {
@@ -178,8 +171,8 @@ const ReorderableList = <T,>(
     runOnUI(resetSharedValues)();
   };
 
-  const getIndexFromY = useWorkletCallback((y: number, scrollY?: number) => {
-    const relativeY = (scrollY || currentScrollOffsetY.value) + y;
+  const getIndexFromY = useWorkletCallback((y: number) => {
+    const relativeY = currentScrollOffsetY.value + y;
     const index = itemOffsets.findIndex(
       (x, i) =>
         (i === 0 && relativeY < x.value.offset) ||
@@ -191,6 +184,33 @@ const ReorderableList = <T,>(
     return index;
   });
 
+  const setCurrentIndex = useWorkletCallback((y: number) => {
+    const newCurrentIndex = getIndexFromY(y);
+    if (currentIndex.value !== newCurrentIndex) {
+      const index1 =
+        currentIndex.value < newCurrentIndex
+          ? currentIndex.value
+          : newCurrentIndex;
+      const index2 =
+        currentIndex.value < newCurrentIndex
+          ? newCurrentIndex
+          : currentIndex.value;
+      const offset1 = itemOffsets[index1].value;
+      const offset2 = itemOffsets[index2].value;
+
+      itemOffsets[index1].value = {
+        offset: offset1.offset,
+        length: offset2.length,
+      };
+      itemOffsets[index2].value = {
+        offset: offset2.offset + (offset2.length - offset1.length),
+        length: offset1.length,
+      };
+
+      currentIndex.value = newCurrentIndex;
+    }
+  });
+
   useAnimatedReaction(
     () => gestureState.value,
     () => {
@@ -200,25 +220,24 @@ const ReorderableList = <T,>(
         (state.value === ReorderableListState.DRAGGING ||
           state.value === ReorderableListState.AUTO_SCROLL)
       ) {
-        const currentOffset = itemOffsets[currentIndex.value].value;
-        const draggedOffset = itemOffsets[draggedIndex.value].value;
-
         state.value = ReorderableListState.RELEASING;
         released[draggedIndex.value].value = true;
 
         // enable back scroll on releasing
         runOnJS(setScrollEnabled)(true);
 
-        // if items have different heights and the dragged item is moved forward
-        // then its new offset position needs to be adjusted
-        const offsetCorrection =
-          currentIndex.value > draggedIndex.value
-            ? currentOffset.length - draggedOffset.length
-            : 0;
-        const newTopPosition =
-          currentOffset.offset - draggedOffset.offset + offsetCorrection;
+        // they are actually swapped on drag translation
+        const currentOffset = itemOffsets[draggedIndex.value].value;
+        const draggedOffset = itemOffsets[currentIndex.value].value;
 
-        if (newTopPosition !== itemsY[draggedIndex.value].value) {
+        const newTopPosition =
+          currentIndex.value > draggedIndex.value
+            ? draggedOffset.offset - currentOffset.offset
+            : draggedOffset.offset -
+              currentOffset.offset +
+              (draggedOffset.length - currentOffset.length);
+
+        if (itemsY[draggedIndex.value].value !== newTopPosition) {
           // animate dragged item to its new position on release
           itemsY[draggedIndex.value].value = withTiming(
             newTopPosition,
@@ -247,8 +266,7 @@ const ReorderableList = <T,>(
         state.value === ReorderableListState.DRAGGING ||
         state.value === ReorderableListState.AUTO_SCROLL
       ) {
-        const index = getIndexFromY(y);
-        currentIndex.value = index;
+        setCurrentIndex(y);
 
         if (y <= topAutoscrollArea.value || y >= bottomAutoscrollArea.value) {
           if (state.value !== ReorderableListState.AUTO_SCROLL) {
@@ -295,8 +313,7 @@ const ReorderableList = <T,>(
 
         // when autoscrolling user may not be moving his finger so we need
         // to update the current position of the dragged item here
-        const index = getIndexFromY(currentY.value, currentScrollOffsetY.value);
-        currentIndex.value = index;
+        setCurrentIndex(currentY.value);
       }
     },
   );
@@ -363,7 +380,6 @@ const ReorderableList = <T,>(
 
   const handleContainerLayout = () => {
     container.current?.measureInWindow((x: number, y: number) => {
-      containerPositionX.value = x;
       containerPositionY.value = y;
     });
   };
