@@ -42,6 +42,10 @@ export interface ReorderableListProps<T>
    */
   containerStyle?: StyleProp<ViewStyle>;
   /**
+   * Safe area top inset. Default: `0`.
+   */
+  safeAreaTopInset?: number;
+  /**
    * Area at the extremeties of the list which triggers scrolling when an item is dragged.
    * Accepts a value between `0` and `0.5`. Default: `0.1`.
    */

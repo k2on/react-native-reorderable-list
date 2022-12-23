@@ -48,6 +48,7 @@ const ReorderableList = <T,>(
   {
     data,
     containerStyle,
+    safeAreaTopInset = 0,
     autoscrollArea = 0.1,
     autoscrollSpeed = 1,
     animationDuration = 200,
@@ -107,7 +108,8 @@ const ReorderableList = <T,>(
     onStart: (e, ctx) => {
       // prevent new dragging until item is completely released
       if (state.value === ReorderableListState.IDLE) {
-        const relativeY = e.absoluteY - containerPositionY.value;
+        const relativeY =
+          e.absoluteY - containerPositionY.value - safeAreaTopInset;
 
         ctx.startY = relativeY;
         currentY.value = relativeY;
