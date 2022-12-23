@@ -187,27 +187,33 @@ const ReorderableList = <T,>(
   const setCurrentIndex = useWorkletCallback((y: number) => {
     const newCurrentIndex = getIndexFromY(y);
     if (currentIndex.value !== newCurrentIndex) {
-      const index1 =
-        currentIndex.value < newCurrentIndex
-          ? currentIndex.value
-          : newCurrentIndex;
-      const index2 =
-        currentIndex.value < newCurrentIndex
-          ? newCurrentIndex
-          : currentIndex.value;
+      const moveDown = currentIndex.value < newCurrentIndex;
+      const index1 = moveDown ? currentIndex.value : newCurrentIndex;
+      const index2 = moveDown ? newCurrentIndex : currentIndex.value;
       const offset1 = itemOffsets[index1].value;
       const offset2 = itemOffsets[index2].value;
 
-      itemOffsets[index1].value = {
-        offset: offset1.offset,
-        length: offset2.length,
-      };
-      itemOffsets[index2].value = {
-        offset: offset2.offset + (offset2.length - offset1.length),
-        length: offset1.length,
-      };
+      const newOffset1 = offset1.offset;
+      const newLength1 = offset2.length;
+      const newOffset2 = offset2.offset + (offset2.length - offset1.length);
+      const newLength2 = offset1.length;
 
-      currentIndex.value = newCurrentIndex;
+      // if item was dragged into his new hypothetical offsets then swap offests and set new current index
+      if (
+        (moveDown && y >= newOffset2 && y < newOffset2 + newLength2) ||
+        (!moveDown && y >= newOffset1 && y < newOffset1 + newLength1)
+      ) {
+        itemOffsets[index1].value = {
+          offset: newOffset1,
+          length: newLength1,
+        };
+        itemOffsets[index2].value = {
+          offset: newOffset2,
+          length: newLength2,
+        };
+
+        currentIndex.value = newCurrentIndex;
+      }
     }
   });
 
