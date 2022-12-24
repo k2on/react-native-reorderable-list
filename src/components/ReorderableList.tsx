@@ -190,6 +190,8 @@ const ReorderableList = <T,>(
   const setCurrentIndex = useWorkletCallback((y: number) => {
     const newCurrentIndex = getIndexFromY(y);
     if (currentIndex.value !== newCurrentIndex) {
+      const relativeY = currentScrollOffsetY.value + y;
+
       const moveDown = currentIndex.value < newCurrentIndex;
       const index1 = moveDown ? currentIndex.value : newCurrentIndex;
       const index2 = moveDown ? newCurrentIndex : currentIndex.value;
@@ -203,8 +205,12 @@ const ReorderableList = <T,>(
 
       // if item was dragged into his new hypothetical offsets then swap offests and set new current index
       if (
-        (moveDown && y >= newOffset2 && y < newOffset2 + newLength2) ||
-        (!moveDown && y >= newOffset1 && y < newOffset1 + newLength1)
+        (moveDown &&
+          relativeY >= newOffset2 &&
+          relativeY < newOffset2 + newLength2) ||
+        (!moveDown &&
+          relativeY >= newOffset1 &&
+          relativeY < newOffset1 + newLength1)
       ) {
         itemOffsets[index1].value = {
           offset: newOffset1,
