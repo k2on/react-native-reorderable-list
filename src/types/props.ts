@@ -46,8 +46,8 @@ export interface ReorderableListProps<T>
    */
   safeAreaTopInset?: number;
   /**
-   * Area at the extremeties of the list which triggers scrolling when an item is dragged.
-   * Accepts a value between `0` and `0.5`. Default: `0.1`.
+   * Area in pixel (density-independent) at the extremety of the list which triggers autoscroll when an item is dragged to it.
+   * Min value: `1`. Max value accepted is 25% of the list height. Default: `50`.
    */
   autoscrollArea?: number;
   /**

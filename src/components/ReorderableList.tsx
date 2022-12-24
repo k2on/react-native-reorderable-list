@@ -49,7 +49,7 @@ const ReorderableList = <T,>(
     data,
     containerStyle,
     safeAreaTopInset = 0,
-    autoscrollArea = 0.1,
+    autoscrollArea = 50,
     autoscrollSpeed = 1,
     autoscrollDelay = AUTOSCROLL_DELAY,
     animationDuration = 200,
@@ -396,7 +396,7 @@ const ReorderableList = <T,>(
   const handleFlatListLayout = useCallback(
     (e: LayoutChangeEvent) => {
       const {height} = e.nativeEvent.layout;
-      const area = height * Math.max(0, Math.min(autoscrollArea, 0.5));
+      const area = Math.max(1, Math.min(autoscrollArea, height / 4));
 
       topAutoscrollArea.value = area;
       bottomAutoscrollArea.value = height - area;
