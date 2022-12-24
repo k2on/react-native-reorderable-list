@@ -55,6 +55,12 @@ export interface ReorderableListProps<T>
    */
   autoscrollSpeed?: number;
   /**
+   * Delay in between autoscroll triggers. Can be used to tune the autoscroll smoothness.
+   * Default Android: `0`.
+   * Default iOS: `250`.
+   */
+  autoscrollDelay?: number;
+  /**
    * Duration of the animations in milliseconds.
    * Be aware that users won't be able to drag a new item until the dragged item is released and
    * its animation to its new position ends.

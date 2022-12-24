@@ -51,6 +51,7 @@ const ReorderableList = <T,>(
     safeAreaTopInset = 0,
     autoscrollArea = 0.1,
     autoscrollSpeed = 1,
+    autoscrollDelay = AUTOSCROLL_DELAY,
     animationDuration = 200,
     onLayout,
     onReorder,
@@ -312,7 +313,7 @@ const ReorderableList = <T,>(
 
           lastAutoscrollTrigger.value = autoscrollTrigger.value;
           autoscrollTrigger.value = withDelay(
-            AUTOSCROLL_DELAY,
+            autoscrollDelay,
             withTiming(autoscrollTrigger.value * -1, {
               duration: 0,
             }),
