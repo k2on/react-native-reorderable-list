@@ -1,18 +1,10 @@
-import React, {useMemo} from 'react';
+import React from 'react';
 import {LayoutChangeEvent} from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedReaction,
-  useAnimatedStyle,
-  useSharedValue,
-  useWorkletCallback,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import ReorderableCellContext from '@library/contexts/ReorderableCellContext';
 import {ItemOffset} from '@library/types/misc';
-import useLibraryContext from '@library/hooks/useLibraryContext';
-import ReorderableListContext from '@library/contexts/ReorderableListContext';
+import useReorderableListCell from '@library/hooks/useReorderableListCell';
 
 interface ReorderableListCellProps<T, U> {
   index: number;
@@ -40,90 +32,16 @@ const ReorderableListCell = <T, U>({
   itemReleased,
   animationDuration,
 }: ReorderableListCellProps<T, U>) => {
-  const dragHandler = useWorkletCallback(() => startDrag(index), [index]);
-  const contextValue = useMemo(
-    () => ({
-      index,
-      dragHandler,
-      dragged: itemDragged,
-      released: itemReleased,
-    }),
-    [index, dragHandler, itemDragged, itemReleased],
-  );
-  const {currentIndex, draggedIndex, draggedHeight} = useLibraryContext(
-    ReorderableListContext,
-  );
-
-  const itemZIndex = useSharedValue(0);
-  const itemPositionY = useSharedValue(0);
-  const itemDragY = useSharedValue(0);
-  const itemIndex = useSharedValue(index);
-
-  useAnimatedReaction(
-    () => dragY.value,
-    () => {
-      if (
-        itemIndex.value === draggedIndex.value &&
-        currentIndex.value >= 0 &&
-        draggedIndex.value >= 0
-      ) {
-        itemDragY.value = dragY.value;
-      }
-    },
-  );
-
-  useAnimatedReaction(
-    () => currentIndex.value,
-    () => {
-      if (
-        itemIndex.value !== draggedIndex.value &&
-        currentIndex.value >= 0 &&
-        draggedIndex.value >= 0
-      ) {
-        const moveDown = currentIndex.value > draggedIndex.value;
-        const startMove = Math.min(draggedIndex.value, currentIndex.value);
-        const endMove = Math.max(draggedIndex.value, currentIndex.value);
-        let newValue = 0;
-
-        if (itemIndex.value >= startMove && itemIndex.value <= endMove) {
-          newValue = moveDown ? -draggedHeight.value : draggedHeight.value;
-        }
-
-        if (newValue !== itemPositionY.value) {
-          itemPositionY.value = withTiming(newValue, {
-            duration: animationDuration.value,
-            easing: Easing.out(Easing.ease),
-          });
-        }
-      }
-    },
-  );
-
-  useAnimatedReaction(
-    () => itemDragged.value,
-    () => {
-      itemZIndex.value = itemDragged.value ? 999 : 0;
-    },
-  );
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    zIndex: itemZIndex.value,
-    transform: [
-      {translateY: itemDragY.value},
-      {translateY: itemPositionY.value},
-    ],
-  }));
-
-  const handleLayout = (e: LayoutChangeEvent) => {
-    itemOffset.value = {
-      offset: e.nativeEvent.layout.y,
-      length: e.nativeEvent.layout.height,
-    };
-
-    if (onLayout) {
-      onLayout(e);
-    }
-  };
+  const {contextValue, animatedStyle, handleLayout} = useReorderableListCell({
+    index,
+    startDrag,
+    onLayout,
+    itemOffset,
+    dragY,
+    itemDragged,
+    itemReleased,
+    animationDuration,
+  });
 
   return (
     <ReorderableCellContext.Provider value={contextValue}>
