@@ -1,63 +1,22 @@
+/* eslint-disable no-restricted-imports */
 import React, {useState} from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  ListRenderItemInfo,
-  Text,
-  SafeAreaView,
-  Button,
-} from 'react-native';
+import {StyleSheet, ListRenderItemInfo, SafeAreaView} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
 import ReorderableList, {
-  useDragHandler,
   ReorderableListReorderEvent,
-  ReorderableAnimation,
 } from 'react-native-reorderable-list';
+import PlaylistItem from './src/components/PlaylistItem';
+import PlaylistItemSeparator from './src/components/PlaylistItemSeparator';
 
-interface CardInfo {
-  id: string;
-  height: number;
-}
-
-const newList = Array(20)
+const list = Array(20)
   .fill(null)
-  .map((_, i) => ({
-    id: i.toString(),
-    height: Math.max(50, Math.floor(Math.random() * 100)),
-  }));
-
-const list: CardInfo[] = Array(100)
-  .fill(null)
-  .map((_, i) => ({
-    id: i.toString(),
-    height: Math.max(50, Math.floor(Math.random() * 100)),
-  }));
-
-const Card: React.FC<CardInfo> = ({id, height}) => {
-  const handleDrag = useDragHandler();
-  const [number, setNumber] = useState(0);
-
-  return (
-    <ReorderableAnimation>
-      <Pressable
-        style={[styles.card, {height}]}
-        onPress={() => setNumber(number + 1)}
-        onLongPress={handleDrag}>
-        <Text style={styles.text}>
-          {id}-{number}
-        </Text>
-      </Pressable>
-    </ReorderableAnimation>
-  );
-};
+  .map((_, i) => ({id: i.toString()}));
 
 const App = () => {
   const [data, setData] = useState(list);
 
-  const renderItem = ({item}: ListRenderItemInfo<CardInfo>) => (
-    <Card {...item} />
-  );
+  const renderItem = ({item}: ListRenderItemInfo<any>) => <PlaylistItem />;
 
   const handleReorder = ({fromIndex, toIndex}: ReorderableListReorderEvent) => {
     const newData = [...data];
@@ -66,41 +25,24 @@ const App = () => {
   };
 
   return (
-    <SafeAreaView style={styles.fill}>
-      <GestureHandlerRootView style={styles.fill}>
+    <GestureHandlerRootView style={styles.fill}>
+      <SafeAreaView style={styles.fill}>
         <ReorderableList
           data={data}
           onReorder={handleReorder}
           renderItem={renderItem}
           containerStyle={styles.fill}
           keyExtractor={(item) => item.id}
+          ItemSeparatorComponent={PlaylistItemSeparator}
         />
-      </GestureHandlerRootView>
-      <Button title="Test" onPress={() => setData(newList)} />
-    </SafeAreaView>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 };
 
 const styles = StyleSheet.create({
   fill: {
     flex: 1,
-  },
-  card: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: 6,
-    borderRadius: 5,
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  text: {
-    fontSize: 20,
-  },
-  button: {
-    height: 60,
-    backgroundColor: 'lightblue',
   },
 });
 
