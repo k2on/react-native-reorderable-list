@@ -6,7 +6,7 @@ import {
   ViewProps,
   ViewStyle,
 } from 'react-native';
-import {EasingFn, EasingFunctionFactory} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 export interface CellProps<T> {
   index: number;
@@ -93,11 +93,11 @@ export interface ReorderableAnimationOptions {
   /**
    * Easing function for the animation to the end value. Default: `Easing.in(Easing.ease)`.
    */
-  easingDragEnd?: EasingFn | EasingFunctionFactory;
+  easingDragEnd?: Animated.EasingFunction;
   /**
    * Easing function for the animation to the start value. Default: `Easing.out(Easing.ease)`.
    */
-  easingDragStart?: EasingFn | EasingFunctionFactory;
+  easingDragStart?: Animated.EasingFunction;
   /**
    * Duration of the animations in milliseconds. Default: `200`.
    */

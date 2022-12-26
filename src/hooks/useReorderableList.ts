@@ -4,6 +4,7 @@ import {
   LayoutChangeEvent,
   unstable_batchedUpdates,
   NativeScrollEvent,
+  View,
 } from 'react-native';
 import {
   PanGestureHandlerGestureEvent,
@@ -309,7 +310,7 @@ const useReorderableList = <T>({
 
         if (autoscrollIncrement !== 0) {
           scrollTo(
-            flatList,
+            flatList as unknown as React.RefObject<Animated.ScrollView>,
             0,
             currentScrollOffsetY.value + autoscrollIncrement,
             true,
@@ -364,9 +365,11 @@ const useReorderableList = <T>({
   );
 
   const handleContainerLayout = () => {
-    containerRef.current?.measureInWindow((x: number, y: number) => {
-      containerPositionY.value = y;
-    });
+    (containerRef.current as unknown as View)?.measureInWindow(
+      (x: number, y: number) => {
+        containerPositionY.value = y;
+      },
+    );
   };
 
   const handleFlatListLayout = useCallback(

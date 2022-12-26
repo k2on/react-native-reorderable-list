@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "update-library": "cd ../ && npm run build && npx tsc-alias && rm -f ./react-native-reorderable-list*.tgz && npm pack && mv ./react-native-reorderable-list*.tgz ./react-native-reorderable-list.tgz && cd ./example && npm uninstall react-native-reorderable-list && npm i ../react-native-reorderable-list.tgz",
+    "update-library": "cd ../ && npm run build && rm -f ./react-native-reorderable-list*.tgz && npm pack && mv ./react-native-reorderable-list*.tgz ./react-native-reorderable-list.tgz && cd ./example && npm uninstall react-native-reorderable-list && npm i ../react-native-reorderable-list.tgz",
     "android": "react-native run-android",
     "build:android": "mkdirp dist/res && react-native bundle --entry-file index.js --platform android --dev true --bundle-output dist/main.android.jsbundle --assets-dest dist/res",
     "build:ios": "mkdirp dist && react-native bundle --entry-file index.js --platform ios --dev true --bundle-output dist/main.ios.jsbundle --assets-dest dist",
