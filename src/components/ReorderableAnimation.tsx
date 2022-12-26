@@ -1,13 +1,8 @@
 import React from 'react';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, {Easing} from 'react-native-reanimated';
 
-import useAnimatedDrag from '@library/hooks/useAnimatedDrag';
 import {ReorderableAnimationProps} from '@library/types/props';
+import useReorderableAnimation from '@library/hooks/useReorderableAnimation';
 
 const scaleDefaultOptions = {
   enabled: true,
@@ -32,58 +27,10 @@ const ReorderableAnimation: React.FC<ReorderableAnimationProps> = ({
   opacityOptions = opacityDefaultOptions,
   ...rest
 }) => {
-  const scale = useSharedValue(
-    scaleOptions.enabled ? scaleOptions.valueDragEnd : 1,
-  );
-  const opacity = useSharedValue(
-    opacityOptions.enabled ? opacityOptions.valueDragEnd : 1,
-  );
-
-  useAnimatedDrag({
-    onStart: () => {
-      'worklet';
-
-      if (scaleOptions.enabled) {
-        scale.value = withTiming(scaleOptions.valueDragStart, {
-          easing: scaleOptions.easingDragStart,
-          duration: scaleOptions.duration,
-        });
-      }
-
-      if (opacityOptions.enabled) {
-        opacity.value = withTiming(opacityOptions.valueDragStart, {
-          easing: opacityOptions.easingDragStart,
-          duration: opacityOptions.duration,
-        });
-      }
-    },
-    onRelease: () => {
-      'worklet';
-
-      if (scaleOptions.enabled) {
-        scale.value = withTiming(scaleOptions.valueDragEnd, {
-          easing: scaleOptions.easingDragEnd,
-          duration: scaleOptions.duration,
-        });
-      }
-
-      if (opacityOptions.enabled) {
-        opacity.value = withTiming(opacityOptions.valueDragEnd, {
-          easing: opacityOptions.easingDragEnd,
-          duration: opacityOptions.duration,
-        });
-      }
-    },
+  const {animatedStyle} = useReorderableAnimation({
+    scaleOptions,
+    opacityOptions,
   });
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        scale: scale.value,
-      },
-    ],
-    opacity: opacity.value,
-  }));
 
   return <Animated.View {...rest} style={[animatedStyle, rest.style]} />;
 };
