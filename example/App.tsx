@@ -1,6 +1,13 @@
 /* eslint-disable no-restricted-imports */
 import React, {useState} from 'react';
-import {StyleSheet, ListRenderItemInfo, SafeAreaView} from 'react-native';
+import {
+  StyleSheet,
+  ListRenderItemInfo,
+  SafeAreaView,
+  Text,
+  Platform,
+  StatusBar,
+} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import ReorderableList, {
   ReorderableListReorderEvent,
@@ -26,6 +33,7 @@ const App = () => {
   return (
     <GestureHandlerRootView style={styles.fill}>
       <SafeAreaView style={styles.fill}>
+        <Text style={styles.title}>Playlist</Text>
         <ReorderableList
           data={data}
           onReorder={handleReorder}
@@ -33,6 +41,7 @@ const App = () => {
           containerStyle={styles.fill}
           keyExtractor={(item) => item.id}
           ItemSeparatorComponent={PlaylistItemSeparator}
+          safeAreaTopInset={Platform.OS === 'ios' ? StatusBar.currentHeight : 0}
         />
       </SafeAreaView>
     </GestureHandlerRootView>
@@ -40,6 +49,13 @@ const App = () => {
 };
 
 const styles = StyleSheet.create({
+  title: {
+    color: 'black',
+    fontSize: 32,
+    fontWeight: '500',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
   fill: {
     flex: 1,
   },
