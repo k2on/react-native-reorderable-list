@@ -1,5 +1,5 @@
-import Playlist from './Playlist';
-import RandomList from './RandomList';
+import Playlist from '@screens/Playlist';
+import RandomList from '@screens/RandomList';
 
 const screens = [
   {

@@ -4,7 +4,7 @@ import ReorderableList, {
   ReorderableListReorderEvent,
 } from 'react-native-reorderable-list';
 
-import RandomListItem from './RandomListItem';
+import RandomListItem from '@screens/RandomList/RandomListItem';
 
 const list = Array(50)
   .fill(null)

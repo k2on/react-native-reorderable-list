@@ -1,8 +1,9 @@
 import React from 'react';
-import {Pressable, StyleSheet, Text, FlatList, View} from 'react-native';
+import {StyleSheet, Text, FlatList, View} from 'react-native';
+import {TouchableHighlight} from 'react-native-gesture-handler';
 import {useNavigation} from '@react-navigation/native';
 
-import screens from '../screens';
+import screens from '@screens/screens';
 
 const Home = () => {
   const navigation = useNavigation<any>();
@@ -11,11 +12,11 @@ const Home = () => {
     <FlatList
       data={screens}
       renderItem={(x) => (
-        <Pressable
+        <TouchableHighlight
           style={styles.item}
           onPress={() => navigation.navigate(x.item.name)}>
           <Text style={styles.text}>{x.item.name}</Text>
-        </Pressable>
+        </TouchableHighlight>
       )}
       keyExtractor={(item) => item.id}
       contentContainerStyle={styles.container}

@@ -1,7 +1,4 @@
-/**
- * @format
- */
-
+/* eslint-disable no-restricted-imports */
 import {AppRegistry} from 'react-native';
 
 import App from './screens';

@@ -5,8 +5,8 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
-import HomeScreen from './Home';
-import screens from './screens';
+import HomeScreen from '@screens/Home';
+import screens from '@screens/screens';
 
 const Stack = createNativeStackNavigator();
 

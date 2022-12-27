@@ -1,6 +1,5 @@
 import React from 'react';
 import {Pressable, Text, Image, View, StyleSheet} from 'react-native';
-
 import {
   useDragHandler,
   ReorderableAnimation,

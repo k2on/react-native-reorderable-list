@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-imports */
 import React, {useState} from 'react';
 import {
   StyleSheet,
@@ -10,9 +9,9 @@ import ReorderableList, {
   ReorderableListReorderEvent,
 } from 'react-native-reorderable-list';
 
-import PlaylistItem from './PlaylistItem';
-import PlaylistItemSeparator from './PlaylistItemSeparator';
-import playlistData from './data.json';
+import PlaylistItem from '@screens/Playlist/PlaylistItem';
+import PlaylistItemSeparator from '@screens/Playlist/PlaylistItemSeparator';
+import playlistData from '@screens/Playlist/data.json';
 
 const Playlist = () => {
   const [data, setData] = useState(playlistData);
