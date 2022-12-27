@@ -2,21 +2,20 @@
 import React, {useState} from 'react';
 import {StyleSheet, ListRenderItemInfo, SafeAreaView} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
-
 import ReorderableList, {
   ReorderableListReorderEvent,
 } from 'react-native-reorderable-list';
-import PlaylistItem from './src/components/PlaylistItem';
-import PlaylistItemSeparator from './src/components/PlaylistItemSeparator';
 
-const list = Array(20)
-  .fill(null)
-  .map((_, i) => ({id: i.toString()}));
+import PlaylistItem from './screens/Playlist/PlaylistItem';
+import PlaylistItemSeparator from './screens/Playlist/PlaylistItemSeparator';
+import playlistData from './screens/Playlist/data.json';
 
 const App = () => {
-  const [data, setData] = useState(list);
+  const [data, setData] = useState(playlistData);
 
-  const renderItem = ({item}: ListRenderItemInfo<any>) => <PlaylistItem />;
+  const renderItem = ({item}: ListRenderItemInfo<any>) => (
+    <PlaylistItem {...item} />
+  );
 
   const handleReorder = ({fromIndex, toIndex}: ReorderableListReorderEvent) => {
     const newData = [...data];

@@ -6,7 +6,13 @@ import {
   ReorderableAnimation,
 } from 'react-native-reorderable-list';
 
-const PlaylistItem: React.FC = () => {
+interface PlaylistItemProps {
+  image: string;
+  title: string;
+  author: string;
+}
+
+const PlaylistItem: React.FC<PlaylistItemProps> = ({image, title, author}) => {
   const handleDrag = useDragHandler();
 
   return (
@@ -15,12 +21,12 @@ const PlaylistItem: React.FC = () => {
         <Image
           style={styles.image}
           source={{
-            uri: 'https://upload.wikimedia.org/wikipedia/en/2/24/GnarlsBarkleyCrazyCover.JPG',
+            uri: image,
           }}
         />
         <View style={styles.right}>
-          <Text style={styles.title}>Crazy</Text>
-          <Text style={styles.author}>Gnarls Barkley</Text>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.author}>{author}</Text>
         </View>
       </Pressable>
     </ReorderableAnimation>
