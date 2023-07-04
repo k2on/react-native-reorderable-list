@@ -1,21 +1,13 @@
-import {
+import type {
   FlatListProps,
-  LayoutChangeEvent,
   NativeScrollEvent,
   StyleProp,
   ViewProps,
   ViewStyle,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
 
-export interface CellProps<T> {
-  index: number;
-  children?: React.ReactElement;
-  item: T;
-  onLayout: (e: LayoutChangeEvent) => void;
-  parentProps: FlatListProps<T>;
-  keyExtractor?: (item: T, index: number) => string;
-}
+import type Animated from 'react-native-reanimated';
+
 export interface ReorderableListReorderEvent {
   /**
    * Index of the dragged item.
@@ -32,7 +24,8 @@ type OmittedProps =
   | 'onScroll'
   | 'scrollEventThrottle'
   | 'removeClippedSubviews'
-  | 'CellRendererComponent';
+  | 'CellRendererComponent'
+  | 'numColumns';
 
 export interface ReorderableListProps<T>
   extends Omit<FlatListProps<T>, OmittedProps> {

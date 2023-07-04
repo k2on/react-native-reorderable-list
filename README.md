@@ -27,7 +27,7 @@ So head down to their docs and follow their instructions.
 
 ## API
 
-This component uses a [FlatList](https://reactnative.dev/docs/flatlist) and it extends its props. See [Known Limitations](#known-limitations).
+This component uses a [FlatList](https://reactnative.dev/docs/flatlist) and it extends its props. See [Known Limitations](#known-limitations) for unsupported props.
 
 Additional props:
 
@@ -49,6 +49,7 @@ Unsupported FlatList props:
   - ```scrollEventThrottle```
   - ```removeClippedSubviews```
   - ```CellRendererComponent```
+  - ```numColumns```
 
 Different FlatList props:
 
@@ -142,3 +143,15 @@ const styles = StyleSheet.create({
 
 export default App;
 ```
+
+## Contributing
+
+See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
+
+## License
+
+MIT
+
+---
+
+Made with [create-react-native-library](https://github.com/callstack/react-native-builder-bob)

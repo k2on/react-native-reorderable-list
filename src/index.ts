@@ -1,13 +1,13 @@
-import ReorderableList from '@library/components/ReorderableList';
-import ReorderableAnimation from '@library/components/ReorderableAnimation';
-import useDragHandler from '@library/hooks/useDragHandler';
-import useAnimatedDrag from '@library/hooks/useAnimatedDrag';
-import {
+import ReorderableAnimation from './components/ReorderableAnimation';
+import ReorderableList from './components/ReorderableList';
+import useAnimatedDrag from './hooks/useAnimatedDrag';
+import useDragHandler from './hooks/useDragHandler';
+import type {
+  ReorderableAnimationOptions,
+  ReorderableAnimationProps,
   ReorderableListProps,
   ReorderableListReorderEvent,
-  ReorderableAnimationProps,
-  ReorderableAnimationOptions,
-} from '@library/types/props';
+} from './types/props';
 
 export {
   ReorderableAnimation,

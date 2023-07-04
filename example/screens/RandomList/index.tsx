@@ -1,12 +1,13 @@
 import React, {useState} from 'react';
-import {StyleSheet, ListRenderItemInfo} from 'react-native';
+import {ListRenderItemInfo, StyleSheet} from 'react-native';
+
 import ReorderableList, {
   ReorderableListReorderEvent,
 } from 'react-native-reorderable-list';
 
-import RandomListItem from '@screens/RandomList/RandomListItem';
+import RandomListItem from './RandomListItem';
 
-const list = Array(50)
+const list = Array(1000)
   .fill(null)
   .map((_, i) => ({
     id: i.toString(),
@@ -34,7 +35,7 @@ const RandomList = () => {
       onReorder={handleReorder}
       renderItem={renderItem}
       containerStyle={styles.fill}
-      keyExtractor={(item) => item.id}
+      keyExtractor={item => item.id}
     />
   );
 };

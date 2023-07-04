@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 export function setForwardedRef<T>(ref: React.ForwardedRef<T>, value: T) {
   if (typeof ref === 'function') {

@@ -1,12 +1,13 @@
 import * as React from 'react';
 import {StyleSheet} from 'react-native';
+
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 
-import HomeScreen from '@screens/Home';
-import screens from '@screens/screens';
+import HomeScreen from './Home';
+import screens from './screens';
 
 const Stack = createNativeStackNavigator();
 
@@ -16,7 +17,7 @@ const App = () => (
       <NavigationContainer>
         <Stack.Navigator>
           <Stack.Screen name="Home" component={HomeScreen} />
-          {screens.map((x) => (
+          {screens.map(x => (
             <Stack.Screen key={x.id} name={x.name} component={x.component} />
           ))}
         </Stack.Navigator>

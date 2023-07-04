@@ -1,9 +1,11 @@
 import React from 'react';
-import {StyleSheet, Text, FlatList, View} from 'react-native';
-import {TouchableHighlight} from 'react-native-gesture-handler';
-import {useNavigation} from '@react-navigation/native';
+import {FlatList, StyleSheet, Text} from 'react-native';
 
-import screens from '@screens/screens';
+import {useNavigation} from '@react-navigation/native';
+import {TouchableHighlight} from 'react-native-gesture-handler';
+
+import ItemSeparator from './ItemSeparator';
+import screens from '../screens';
 
 const Home = () => {
   const navigation = useNavigation<any>();
@@ -11,16 +13,16 @@ const Home = () => {
   return (
     <FlatList
       data={screens}
-      renderItem={(x) => (
+      renderItem={x => (
         <TouchableHighlight
           style={styles.item}
           onPress={() => navigation.navigate(x.item.name)}>
           <Text style={styles.text}>{x.item.name}</Text>
         </TouchableHighlight>
       )}
-      keyExtractor={(item) => item.id}
+      keyExtractor={item => item.id}
       contentContainerStyle={styles.container}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
+      ItemSeparatorComponent={ItemSeparator}
     />
   );
 };
@@ -38,11 +40,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 18,
     color: 'black',
-  },
-  separator: {
-    height: 1,
-    width: '100%',
-    backgroundColor: 'lightgray',
   },
 });
 

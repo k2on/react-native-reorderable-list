@@ -1,17 +1,18 @@
 import React, {useState} from 'react';
 import {
-  StyleSheet,
   ListRenderItemInfo,
   Platform,
   StatusBar,
+  StyleSheet,
 } from 'react-native';
+
 import ReorderableList, {
   ReorderableListReorderEvent,
 } from 'react-native-reorderable-list';
 
-import PlaylistItem from '@screens/Playlist/PlaylistItem';
-import PlaylistItemSeparator from '@screens/Playlist/PlaylistItemSeparator';
-import playlistData from '@screens/Playlist/data.json';
+import playlistData from './data.json';
+import PlaylistItem from './PlaylistItem';
+import PlaylistItemSeparator from './PlaylistItemSeparator';
 
 const Playlist = () => {
   const [data, setData] = useState(playlistData);
@@ -32,7 +33,7 @@ const Playlist = () => {
       onReorder={handleReorder}
       renderItem={renderItem}
       containerStyle={styles.container}
-      keyExtractor={(item) => item.id}
+      keyExtractor={item => item.id}
       ItemSeparatorComponent={PlaylistItemSeparator}
       safeAreaTopInset={Platform.OS === 'ios' ? StatusBar.currentHeight : 0}
     />

@@ -1,16 +1,17 @@
-import React, {useRef, useCallback} from 'react';
-import {FlatList, FlatListProps} from 'react-native';
+import React, {useCallback, useRef} from 'react';
+import {CellRendererProps, FlatList, FlatListProps} from 'react-native';
+
 import {
   NativeViewGestureHandler,
   PanGestureHandler,
 } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 
-import ReorderableListCell from '@library/components/ReorderableListCell';
-import ReorderableListContext from '@library/contexts/ReorderableListContext';
-import {CellProps, ReorderableListProps} from '@library/types/props';
-import {AUTOSCROLL_DELAY} from '@library/consts';
-import useReorderableList from '@library/hooks/useReorderableList';
+import ReorderableListCell from '../components/ReorderableListCell';
+import {AUTOSCROLL_DELAY} from '../consts';
+import ReorderableListContext from '../contexts/ReorderableListContext';
+import useReorderableList from '../hooks/useReorderableList';
+import type {ReorderableListProps} from '../types/props';
 
 const AnimatedFlatList = Animated.createAnimatedComponent(
   FlatList,
@@ -30,6 +31,8 @@ const ReorderableList = <T,>(
     onLayout,
     onReorder,
     onScroll,
+    keyExtractor,
+    extraData,
     ...rest
   }: ReorderableListProps<T>,
   ref: React.ForwardedRef<FlatList<T>>,
@@ -63,19 +66,12 @@ const ReorderableList = <T,>(
   });
 
   const renderAnimatedCell = useCallback(
-    ({
-      index,
-      children,
-      item,
-      onLayout: onCellLayout,
-      parentProps,
-      keyExtractor,
-    }: CellProps<T>) => (
+    ({index, children, item, onLayout: onCellLayout}: CellRendererProps<T>) => (
       <ReorderableListCell
         // forces remount of components with key change
         key={keyExtractor ? keyExtractor(item, index) : index}
         item={item}
-        extraData={parentProps?.extraData}
+        extraData={extraData}
         index={index}
         itemOffset={itemOffsets[index]}
         dragY={itemsY[index]}
@@ -87,7 +83,16 @@ const ReorderableList = <T,>(
         onLayout={onCellLayout}
       />
     ),
-    [itemOffsets, startDrag, dragged, itemsY, released, duration],
+    [
+      itemOffsets,
+      startDrag,
+      dragged,
+      itemsY,
+      released,
+      duration,
+      keyExtractor,
+      extraData,
+    ],
   );
 
   return (
@@ -112,6 +117,9 @@ const ReorderableList = <T,>(
               scrollEventThrottle={1}
               horizontal={false}
               removeClippedSubviews={false}
+              keyExtractor={keyExtractor}
+              extraData={extraData}
+              numColumns={1}
             />
           </NativeViewGestureHandler>
         </Animated.View>

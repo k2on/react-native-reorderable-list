@@ -1,10 +1,11 @@
 import React from 'react';
-import {LayoutChangeEvent} from 'react-native';
+import type {LayoutChangeEvent} from 'react-native';
+
 import Animated from 'react-native-reanimated';
 
-import ReorderableCellContext from '@library/contexts/ReorderableCellContext';
-import {ItemOffset} from '@library/types/misc';
-import useReorderableListCell from '@library/hooks/useReorderableListCell';
+import ReorderableCellContext from '../contexts/ReorderableCellContext';
+import useReorderableListCell from '../hooks/useReorderableListCell';
+import type {ItemOffset} from '../types/misc';
 
 interface ReorderableListCellProps<T, U> {
   index: number;

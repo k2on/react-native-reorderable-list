@@ -1,5 +1,6 @@
 import {useMemo} from 'react';
-import {LayoutChangeEvent} from 'react-native';
+import type {LayoutChangeEvent} from 'react-native';
+
 import Animated, {
   Easing,
   useAnimatedReaction,
@@ -9,9 +10,9 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import {ItemOffset} from '@library/types/misc';
-import useLibraryContext from '@library/hooks/useLibraryContext';
-import ReorderableListContext from '@library/contexts/ReorderableListContext';
+import ReorderableListContext from '../contexts/ReorderableListContext';
+import useLibraryContext from '../hooks/useLibraryContext';
+import type {ItemOffset} from '../types/misc';
 
 interface UseReorderableListCellArgs {
   index: number;

@@ -2,34 +2,35 @@ import React, {useCallback, useMemo} from 'react';
 import {
   FlatList,
   LayoutChangeEvent,
-  unstable_batchedUpdates,
   NativeScrollEvent,
   View,
+  unstable_batchedUpdates,
 } from 'react-native';
+
 import {
   PanGestureHandlerGestureEvent,
   State,
 } from 'react-native-gesture-handler';
 import Animated, {
-  useAnimatedGestureHandler,
-  useSharedValue,
-  useAnimatedReaction,
+  Easing,
   runOnJS,
+  runOnUI,
+  scrollTo,
+  useAnimatedGestureHandler,
+  useAnimatedReaction,
   useAnimatedRef,
   useAnimatedScrollHandler,
-  scrollTo,
-  withTiming,
-  Easing,
+  useSharedValue,
   useWorkletCallback,
   withDelay,
-  runOnUI,
+  withTiming,
 } from 'react-native-reanimated';
 
-import useSharedValuesArray from '@library/hooks/useSharedValuesArray';
-import {ItemOffset, ReorderableListState} from '@library/types/misc';
-import {setForwardedRef} from '@library/utils/setForwardedRef';
-import {AUTOSCROLL_INCREMENT} from '@library/consts';
-import {ReorderableListReorderEvent} from '@library/types/props';
+import {AUTOSCROLL_INCREMENT} from '../consts';
+import useSharedValuesArray from '../hooks/useSharedValuesArray';
+import {ItemOffset, ReorderableListState} from '../types/misc';
+import type {ReorderableListReorderEvent} from '../types/props';
+import {setForwardedRef} from '../utils/setForwardedRef';
 
 const version = React.version.split('.');
 const hasAutomaticBatching =
@@ -131,10 +132,10 @@ const useReorderableList = <T>({
         gestureState.value = e.state;
       }
     },
-    onEnd: (e) => (gestureState.value = e.state),
-    onFinish: (e) => (gestureState.value = e.state),
-    onCancel: (e) => (gestureState.value = e.state),
-    onFail: (e) => (gestureState.value = e.state),
+    onEnd: e => (gestureState.value = e.state),
+    onFinish: e => (gestureState.value = e.state),
+    onCancel: e => (gestureState.value = e.state),
+    onFail: e => (gestureState.value = e.state),
   });
 
   const setScrollEnabled = useCallback(
@@ -275,7 +276,7 @@ const useReorderableList = <T>({
 
   useAnimatedReaction(
     () => currentY.value,
-    (y) => {
+    y => {
       if (
         state.value === ReorderableListState.DRAGGING ||
         state.value === ReorderableListState.AUTO_SCROLL
@@ -332,7 +333,7 @@ const useReorderableList = <T>({
     },
   );
 
-  const handleScroll = useAnimatedScrollHandler((e) => {
+  const handleScroll = useAnimatedScrollHandler(e => {
     currentScrollOffsetY.value = e.contentOffset.y;
 
     if (state.value === ReorderableListState.AUTO_SCROLL) {
@@ -366,7 +367,7 @@ const useReorderableList = <T>({
 
   const handleContainerLayout = () => {
     (containerRef.current as unknown as View)?.measureInWindow(
-      (x: number, y: number) => {
+      (_, y: number) => {
         containerPositionY.value = y;
       },
     );

@@ -4,8 +4,8 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 
-import useAnimatedDrag from '@library/hooks/useAnimatedDrag';
-import {ReorderableAnimationOptions} from '@library/types/props';
+import useAnimatedDrag from '../hooks/useAnimatedDrag';
+import type {ReorderableAnimationOptions} from '../types/props';
 
 interface UseReorderableAnimationArgs {
   scaleOptions: ReorderableAnimationOptions;

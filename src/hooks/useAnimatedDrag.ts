@@ -1,9 +1,10 @@
 import {DependencyList, useEffect} from 'react';
+
 import {useAnimatedReaction} from 'react-native-reanimated';
 
-import useLibraryContext from '@library/hooks/useLibraryContext';
-import ReorderableCellContext from '@library/contexts/ReorderableCellContext';
-import ReorderableListContext from '@library/contexts/ReorderableListContext';
+import ReorderableCellContext from '../contexts/ReorderableCellContext';
+import ReorderableListContext from '../contexts/ReorderableListContext';
+import useLibraryContext from '../hooks/useLibraryContext';
 
 interface UseAnimatedDragHandlers {
   onStart?: () => void;
@@ -20,7 +21,7 @@ const useAnimatedDrag = (
 
   useAnimatedReaction(
     () => dragged.value,
-    (newValue) => {
+    newValue => {
       if (newValue && onStart) {
         onStart();
       }
@@ -30,7 +31,7 @@ const useAnimatedDrag = (
 
   useAnimatedReaction(
     () => released.value,
-    (newValue) => {
+    newValue => {
       if (newValue) {
         released.value = false;
 

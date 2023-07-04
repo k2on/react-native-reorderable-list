@@ -1,5 +1,6 @@
 import React from 'react';
-import Animated from 'react-native-reanimated';
+
+import type Animated from 'react-native-reanimated';
 
 interface ReorderableListContextData {
   draggedIndex: Animated.SharedValue<number>;

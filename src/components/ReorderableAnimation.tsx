@@ -1,8 +1,9 @@
 import React from 'react';
+
 import Animated, {Easing} from 'react-native-reanimated';
 
-import {ReorderableAnimationProps} from '@library/types/props';
-import useReorderableAnimation from '@library/hooks/useReorderableAnimation';
+import useReorderableAnimation from '../hooks/useReorderableAnimation';
+import type {ReorderableAnimationProps} from '../types/props';
 
 const scaleDefaultOptions = {
   enabled: true,

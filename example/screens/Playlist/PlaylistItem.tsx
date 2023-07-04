@@ -1,8 +1,9 @@
 import React from 'react';
-import {Pressable, Text, Image, View, StyleSheet} from 'react-native';
+import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
+
 import {
-  useDragHandler,
   ReorderableAnimation,
+  useDragHandler,
 } from 'react-native-reorderable-list';
 
 interface PlaylistItemProps {

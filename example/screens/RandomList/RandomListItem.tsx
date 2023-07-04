@@ -1,8 +1,9 @@
 import React, {useState} from 'react';
-import {Pressable, Text, StyleSheet} from 'react-native';
+import {Pressable, StyleSheet, Text} from 'react-native';
+
 import {
-  useDragHandler,
   ReorderableAnimation,
+  useDragHandler,
 } from 'react-native-reorderable-list';
 
 interface RandomListItemProps {

@@ -1,4 +1,5 @@
 import {useEffect, useRef} from 'react';
+
 import Animated, {cancelAnimation, makeMutable} from 'react-native-reanimated';
 
 function useSharedValuesArray<T>(
