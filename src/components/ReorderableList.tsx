@@ -1,10 +1,7 @@
-import React, {useCallback, useRef} from 'react';
+import React, {useCallback} from 'react';
 import {CellRendererProps, FlatList, FlatListProps} from 'react-native';
 
-import {
-  NativeViewGestureHandler,
-  PanGestureHandler,
-} from 'react-native-gesture-handler';
+import {GestureDetector} from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 
 import ReorderableListCell from '../components/ReorderableListCell';
@@ -22,7 +19,6 @@ const AnimatedFlatList = Animated.createAnimatedComponent(
 const ReorderableList = <T,>(
   {
     data,
-    containerStyle,
     safeAreaTopInset = 0,
     autoscrollArea = 50,
     autoscrollSpeed = 1,
@@ -37,15 +33,12 @@ const ReorderableList = <T,>(
   }: ReorderableListProps<T>,
   ref: React.ForwardedRef<FlatList<T>>,
 ) => {
-  const nativeHandler = useRef<NativeViewGestureHandler>(null);
   const {
-    handleGestureEvent,
+    gestureHandler,
     handleScroll,
-    handleContainerLayout,
     handleFlatListLayout,
     handleRef,
     startDrag,
-    containerRef,
     listContextValue,
     itemOffsets,
     dragged,
@@ -97,33 +90,22 @@ const ReorderableList = <T,>(
 
   return (
     <ReorderableListContext.Provider value={listContextValue}>
-      <PanGestureHandler
-        maxPointers={1}
-        onGestureEvent={handleGestureEvent}
-        onHandlerStateChange={handleGestureEvent}
-        simultaneousHandlers={nativeHandler}>
-        <Animated.View
-          ref={containerRef}
-          style={containerStyle}
-          onLayout={handleContainerLayout}>
-          <NativeViewGestureHandler ref={nativeHandler}>
-            <AnimatedFlatList
-              {...rest}
-              ref={handleRef}
-              data={data}
-              CellRendererComponent={renderAnimatedCell}
-              onLayout={handleFlatListLayout}
-              onScroll={handleScroll}
-              scrollEventThrottle={1}
-              horizontal={false}
-              removeClippedSubviews={false}
-              keyExtractor={keyExtractor}
-              extraData={extraData}
-              numColumns={1}
-            />
-          </NativeViewGestureHandler>
-        </Animated.View>
-      </PanGestureHandler>
+      <GestureDetector gesture={gestureHandler}>
+        <AnimatedFlatList
+          {...rest}
+          ref={handleRef}
+          data={data}
+          CellRendererComponent={renderAnimatedCell}
+          onLayout={handleFlatListLayout}
+          onScroll={handleScroll}
+          scrollEventThrottle={1}
+          horizontal={false}
+          removeClippedSubviews={false}
+          keyExtractor={keyExtractor}
+          extraData={extraData}
+          numColumns={1}
+        />
+      </GestureDetector>
     </ReorderableListContext.Provider>
   );
 };

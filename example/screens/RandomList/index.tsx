@@ -34,7 +34,7 @@ const RandomList = () => {
       data={data}
       onReorder={handleReorder}
       renderItem={renderItem}
-      containerStyle={styles.fill}
+      style={styles.fill}
       keyExtractor={item => item.id}
     />
   );

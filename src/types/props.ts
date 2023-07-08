@@ -1,10 +1,4 @@
-import type {
-  FlatListProps,
-  NativeScrollEvent,
-  StyleProp,
-  ViewProps,
-  ViewStyle,
-} from 'react-native';
+import type {FlatListProps, NativeScrollEvent, ViewProps} from 'react-native';
 
 import type Animated from 'react-native-reanimated';
 
@@ -30,10 +24,6 @@ type OmittedProps =
 export interface ReorderableListProps<T>
   extends Omit<FlatListProps<T>, OmittedProps> {
   data: T[];
-  /**
-   * Style of the FlatList container.
-   */
-  containerStyle?: StyleProp<ViewStyle>;
   /**
    * Safe area top inset. Default: `0`.
    */

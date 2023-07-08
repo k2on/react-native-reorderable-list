@@ -32,7 +32,7 @@ const Playlist = () => {
       data={data}
       onReorder={handleReorder}
       renderItem={renderItem}
-      containerStyle={styles.container}
+      style={styles.list}
       keyExtractor={item => item.id}
       ItemSeparatorComponent={PlaylistItemSeparator}
       safeAreaTopInset={Platform.OS === 'ios' ? StatusBar.currentHeight : 0}
@@ -41,7 +41,7 @@ const Playlist = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  list: {
     flex: 1,
     backgroundColor: 'white',
   },

@@ -7,16 +7,12 @@ import {
   unstable_batchedUpdates,
 } from 'react-native';
 
-import {
-  PanGestureHandlerGestureEvent,
-  State,
-} from 'react-native-gesture-handler';
+import {Gesture, State} from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   runOnJS,
   runOnUI,
   scrollTo,
-  useAnimatedGestureHandler,
   useAnimatedReaction,
   useAnimatedRef,
   useAnimatedScrollHandler,
@@ -79,7 +75,6 @@ const useReorderableList = <T>({
   const bottomAutoscrollArea = useSharedValue(0);
   const autoscrollTrigger = useSharedValue(-1);
   const lastAutoscrollTrigger = useSharedValue(-1);
-  const flatListHeight = useSharedValue(0);
   const itemsY = useSharedValuesArray(() => 0, data.length);
   const currentIndex = useSharedValue(-1);
   const draggedIndex = useSharedValue(-1);
@@ -102,41 +97,57 @@ const useReorderableList = <T>({
     [draggedHeight, currentIndex, draggedIndex],
   );
 
-  const handleGestureEvent = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    {startY: number}
-  >({
-    onStart: (e, ctx) => {
-      // prevent new dragging until item is completely released
-      if (state.value === ReorderableListState.IDLE) {
-        const relativeY =
-          e.absoluteY - containerPositionY.value - safeAreaTopInset;
+  const startY = useSharedValue(0);
 
-        ctx.startY = relativeY;
-        currentY.value = relativeY;
-        currentTranslationY.value = e.translationY;
-        if (draggedIndex.value >= 0) {
-          itemsY[draggedIndex.value].value = e.translationY;
-        }
-        gestureState.value = e.state;
-      }
-    },
-    onActive: (e, ctx) => {
-      if (state.value !== ReorderableListState.RELEASING) {
-        currentY.value = ctx.startY + e.translationY;
-        currentTranslationY.value = e.translationY;
-        if (draggedIndex.value >= 0) {
-          itemsY[draggedIndex.value].value =
-            e.translationY + dragScrollTranslationY.value;
-        }
-        gestureState.value = e.state;
-      }
-    },
-    onEnd: e => (gestureState.value = e.state),
-    onFinish: e => (gestureState.value = e.state),
-    onCancel: e => (gestureState.value = e.state),
-    onFail: e => (gestureState.value = e.state),
-  });
+  const panGestureHandler = useMemo(
+    () =>
+      Gesture.Pan()
+        .onBegin(e => {
+          // prevent new dragging until item is completely released
+          if (state.value === ReorderableListState.IDLE) {
+            const relativeY =
+              e.absoluteY - containerPositionY.value - safeAreaTopInset;
+
+            startY.value = relativeY;
+            currentY.value = relativeY;
+            currentTranslationY.value = e.translationY;
+            if (draggedIndex.value >= 0) {
+              itemsY[draggedIndex.value].value = e.translationY;
+            }
+            gestureState.value = e.state;
+          }
+        })
+        .onUpdate(e => {
+          if (state.value !== ReorderableListState.RELEASING) {
+            currentY.value = startY.value + e.translationY;
+            currentTranslationY.value = e.translationY;
+            if (draggedIndex.value >= 0) {
+              itemsY[draggedIndex.value].value =
+                e.translationY + dragScrollTranslationY.value;
+            }
+            gestureState.value = e.state;
+          }
+        })
+        .onEnd(e => (gestureState.value = e.state))
+        .onFinalize(e => (gestureState.value = e.state)),
+    [
+      containerPositionY,
+      currentTranslationY,
+      currentY,
+      dragScrollTranslationY,
+      draggedIndex,
+      gestureState,
+      itemsY,
+      safeAreaTopInset,
+      startY,
+      state,
+    ],
+  );
+
+  const gestureHandler = useMemo(
+    () => Gesture.Simultaneous(Gesture.Native(), panGestureHandler),
+    [panGestureHandler],
+  );
 
   const setScrollEnabled = useCallback(
     (scrollEnabled: boolean) => {
@@ -365,34 +376,31 @@ const useReorderableList = <T>({
     [setScrollEnabled],
   );
 
-  const handleContainerLayout = () => {
-    (containerRef.current as unknown as View)?.measureInWindow(
-      (_, y: number) => {
-        containerPositionY.value = y;
-      },
-    );
-  };
-
   const handleFlatListLayout = useCallback(
     (e: LayoutChangeEvent) => {
+      (containerRef.current as unknown as View)?.measureInWindow(
+        (_, y: number) => {
+          containerPositionY.value = y;
+        },
+      );
+
       const {height} = e.nativeEvent.layout;
       const area = Math.max(1, Math.min(autoscrollArea, height / 4));
 
       topAutoscrollArea.value = area;
       bottomAutoscrollArea.value = height - area;
 
-      flatListHeight.value = height;
-
       if (onLayout) {
         onLayout(e);
       }
     },
     [
-      autoscrollArea,
-      bottomAutoscrollArea,
-      flatListHeight,
-      onLayout,
       topAutoscrollArea,
+      containerRef,
+      containerPositionY,
+      bottomAutoscrollArea,
+      autoscrollArea,
+      onLayout,
     ],
   );
 
@@ -402,9 +410,8 @@ const useReorderableList = <T>({
   };
 
   return {
-    handleGestureEvent,
+    gestureHandler,
     handleScroll,
-    handleContainerLayout,
     handleFlatListLayout,
     handleRef,
     startDrag,
